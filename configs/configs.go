@@ -7,10 +7,11 @@ type AuthConfig struct {
 }
 
 type Config struct {
-	HostServer  string `env:"RUN_ADDRESS"`
-	LogLevel    string
-	DatabaseDSN string `env:"DATABASE_DSN"`
-	Auth        AuthConfig
+	HostServer           string `env:"RUN_ADDRESS"`
+	LogLevel             string
+	DatabaseDSN          string `env:"DATABASE_URI"`
+	AccuralSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	Auth                 AuthConfig
 }
 
 var newConfig Config
@@ -19,10 +20,11 @@ var newConfig Config
 // Вызывается один раз при старте проекта
 func InitConfig() *Config {
 	newConfig = Config{
-		HostServer:  ":8000",
-		LogLevel:    "info",
-		DatabaseDSN: "",
-		Auth:        AuthConfig{SecretKey: "supersecretkey"},
+		HostServer:           ":8000",
+		LogLevel:             "info",
+		DatabaseDSN:          "",
+		AccuralSystemAddress: "localhost:7000",
+		Auth:                 AuthConfig{SecretKey: "supersecretkey"},
 	}
 	return &newConfig
 }
@@ -47,6 +49,9 @@ func SetConfigFromEnv() Config {
 	}
 	if envSecretKey := os.Getenv("SECRET_KEY"); envSecretKey != "" {
 		newConfig.Auth.SecretKey = envSecretKey
+	}
+	if envAccuralSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envAccuralSystemAddress != "" {
+		newConfig.AccuralSystemAddress = envAccuralSystemAddress
 	}
 	return newConfig
 }

@@ -13,5 +13,6 @@ func parseFlags(conf *configs.Config) {
 	flag.StringVar(&conf.HostServer, "a", conf.HostServer, "адрес и порт для запуска сервера")
 	flag.StringVar(&conf.DatabaseDSN, "d", conf.DatabaseDSN, "строка с адресом подключения к БД")
 	flag.StringVar(&conf.LogLevel, "l", "info", "уровень логирования")
+	flag.StringVar(&conf.AccuralSystemAddress, "r", conf.AccuralSystemAddress, "адрес сервера системы начисления")
 	flag.Parse()
 }
