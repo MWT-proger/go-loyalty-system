@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
+	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/router"
 	"github.com/MWT-proger/go-loyalty-system/internal/server"
@@ -42,8 +43,13 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	h, err := handlers.NewAPIHandler()
 
-	r := router.Router()
+	if err != nil {
+		return err
+	}
+
+	r := router.Router(h)
 
 	err = server.Run(r)
 
