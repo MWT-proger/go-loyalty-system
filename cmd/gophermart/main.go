@@ -9,6 +9,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/router"
 	"github.com/MWT-proger/go-loyalty-system/internal/server"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
+	"github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
 )
 
 var storage store.Store
@@ -51,7 +52,8 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	h, err := handlers.NewAPIHandler()
+	userStore := userstore.New(&storage)
+	h, err := handlers.NewAPIHandler(userStore)
 
 	if err != nil {
 		return err
