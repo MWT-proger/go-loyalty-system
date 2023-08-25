@@ -8,7 +8,10 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/router"
 	"github.com/MWT-proger/go-loyalty-system/internal/server"
+	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
+
+var storage store.Store
 
 func main() {
 
@@ -24,12 +27,17 @@ func main() {
 // initProject() иницилизирует все необходимые переменный проекта
 func initProject(ctx context.Context) error {
 	var configInit = configs.InitConfig()
+	storage = store.Store{}
 
 	parseFlags(configInit)
 
 	conf := configs.SetConfigFromEnv()
 
 	if err := logger.Initialize(conf.LogLevel); err != nil {
+		return err
+	}
+
+	if err := storage.Init(ctx); err != nil {
 		return err
 	}
 
