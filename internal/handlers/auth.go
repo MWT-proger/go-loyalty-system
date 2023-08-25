@@ -26,21 +26,34 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
 	}
+
 	newUser.Login = data.Login
-
-	// TODO: Генерить хэш
-	newUser.Password = data.Password
-
-	// TODO: Проверять логин
-
-	err := h.UserStore.Insert(context.TODO(), &newUser)
+	args := map[string]interface{}{"login": newUser.Login}
+	obj, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	resp, err := json.Marshal(data)
+	if obj != nil {
+		http.Error(w, "", http.StatusConflict)
+		return
+	}
+
+	// TODO: Генерить хэш
+	// TODO: генерить токен
+	// TODO: авторизовывать пользователя
+	newUser.Password = data.Password
+
+	err = h.UserStore.Insert(context.TODO(), &newUser)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(newUser)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
