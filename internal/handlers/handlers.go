@@ -7,3 +7,7 @@ func NewAPIHandler() (h *APIHandler, err error) {
 
 	return hh, err
 }
+
+type BaseBodyDater interface {
+	IsValid() bool
+}
