@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE "content"."withdrawal" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "number" varchar NOT NULL,
     "user_id" uuid NOT NULL,
     "bonuses" int4,

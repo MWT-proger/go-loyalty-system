@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TYPE status_order_enum AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED');
 CREATE TABLE "content"."order" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "number" varchar NOT NULL,
     "status" status_order_enum NOT NULL DEFAULT 'NEW'::status_order_enum,
     "user_id" uuid NOT NULL,

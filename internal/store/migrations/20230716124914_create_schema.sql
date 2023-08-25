@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE SCHEMA auth;
 CREATE SCHEMA content;
+CREATE EXTENSION "pgcrypto";
 -- +goose StatementEnd
 
 -- +goose Down
