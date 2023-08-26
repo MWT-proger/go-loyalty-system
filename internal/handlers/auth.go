@@ -3,10 +3,11 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/MWT-proger/go-loyalty-system/internal/auth"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/password"
 )
 
 type UserRegister struct {
@@ -15,13 +16,13 @@ type UserRegister struct {
 }
 
 func (d *UserRegister) IsValid() bool {
-	return password.ValidatePassword(d.Password)
+	return auth.ValidatePassword(d.Password)
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 	var data UserRegister
-	newUser := models.User{}
+	newUser := models.NewUser()
 
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
@@ -41,15 +42,15 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser.Password, err = password.HashPassword(data.Password)
+	newUser.Password, err = auth.HashPassword(data.Password)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	err = h.UserStore.Insert(context.TODO(), &newUser)
-
+	err = h.UserStore.Insert(context.TODO(), newUser)
+	fmt.Println(newUser)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return

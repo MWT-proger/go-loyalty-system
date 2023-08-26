@@ -17,7 +17,7 @@ type UserStorer interface {
 }
 
 func New(baseStorage *store.Store) *UserStore {
-	insertQuery := "INSERT INTO auth.user (login, password, created_at) VALUES($1,$2,$3)"
+	insertQuery := "INSERT INTO auth.user (id, login, password, created_at) VALUES($1,$2,$3,$4)"
 	baseSelectQueryFirst := "SELECT * FROM auth.user WHERE "
 
 	insertStore := store.NewInsertStore[*models.User](baseStorage, insertQuery)
