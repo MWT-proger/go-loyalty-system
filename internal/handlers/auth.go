@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/utils"
+	"github.com/MWT-proger/go-loyalty-system/internal/password"
 )
 
 type UserRegister struct {
@@ -15,7 +15,7 @@ type UserRegister struct {
 }
 
 func (d *UserRegister) IsValid() bool {
-	return utils.ValidatePassword(d.Password)
+	return password.ValidatePassword(d.Password)
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
@@ -41,10 +41,12 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Генерить хэш
-	// TODO: генерить токен
-	// TODO: авторизовывать пользователя
-	newUser.Password = data.Password
+	newUser.Password, err = password.HashPassword(data.Password)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
 
 	err = h.UserStore.Insert(context.TODO(), &newUser)
 
@@ -52,6 +54,9 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+
+	// TODO: генерить токен
+	// TODO: авторизовывать пользователя
 
 	resp, err := json.Marshal(newUser)
 	if err != nil {
