@@ -8,17 +8,17 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 )
 
-type UserRegister struct {
+type UserFormAuth struct {
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-func (d *UserRegister) IsValid() bool {
+func (d *UserFormAuth) IsValid() bool {
 	return auth.ValidatePassword(d.Password)
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
-	var data UserRegister
+	var data UserFormAuth
 
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
@@ -28,14 +28,14 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	newUser.Login = data.Login
 
 	args := map[string]interface{}{"login": newUser.Login}
-	obj, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+	objs, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	if obj != nil {
+	if len(objs) > 0 {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
@@ -68,5 +68,41 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
+
+	var data UserFormAuth
+
+	if ok := h.getBodyData(w, r, &data); !ok {
+		return
+	}
+
+	args := map[string]interface{}{"login": data.Login}
+	objs, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if len(objs) == 0 {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+	user := objs[0]
+
+	if ok := auth.CheckPasswordHash(data.Password, user.Password); !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString, err := auth.BuildJWTString(user.ID)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	auth.SetAuthTokenToCookie(w, tokenString)
+
+	w.WriteHeader(http.StatusOK)
 
 }

@@ -25,7 +25,7 @@ func HashPassword(password string) (string, error) {
 
 // CheckPasswordHash(password, hash string) bool - сравнивает хешированный пароль bcrypt
 // с его возможным эквивалентом в виде открытого текста.
-// Возвращает ноль в случае успеха или ошибку в случае неудачи.
+// Возвращает true в случае успеха или false в случае неудачи.
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
