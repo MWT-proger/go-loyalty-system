@@ -1,14 +1,19 @@
 package handlers
 
-import "github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
+import (
+	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
+	"github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
+)
 
 type APIHandler struct {
-	UserStore userstore.UserStorer
+	UserStore  userstore.UserStorer
+	OrderStore orderstore.OrderStorer
 }
 
-func NewAPIHandler(userStore userstore.UserStorer) (h *APIHandler, err error) {
+func NewAPIHandler(userStore userstore.UserStorer, orderstore orderstore.OrderStorer) (h *APIHandler, err error) {
 	hh := &APIHandler{
-		UserStore: userStore,
+		UserStore:  userStore,
+		OrderStore: orderstore,
 	}
 
 	return hh, err
