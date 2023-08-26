@@ -1,10 +1,20 @@
 package auth
 
 import (
+	"net/http"
 	"regexp"
 
+	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/MWT-proger/go-loyalty-system/configs"
 )
+
+type Claims struct {
+	jwt.RegisteredClaims
+	UserID uuid.UUID
+}
 
 // HashPassword(password string) (string, error) - принимает пароль в виде строки,
 // возвращает хеш bcrypt пароля
@@ -46,5 +56,32 @@ func ValidatePassword(password string) bool {
 	hasNumber := regexp.MustCompile(`[0-9]`).MatchString
 
 	return hasNumber(password)
+
+}
+
+// BuildJWTString(UserID uuid.UUID) (string, error) принимает UserID
+// создаёт токен для пользователя
+// и в случае успеха возвращает его в виде строки
+func BuildJWTString(UserID uuid.UUID) (string, error) {
+	conf := configs.GetConfig()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+		RegisteredClaims: jwt.RegisteredClaims{},
+		UserID:           UserID,
+	})
+
+	tokenString, err := token.SignedString([]byte(conf.Auth.SecretKey))
+
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func SetAuthTokenToCookie(w http.ResponseWriter, token string) {
+	newCookie := http.Cookie{Name: "token"}
+	newCookie.Value = token
+	http.SetCookie(w, &newCookie)
 
 }

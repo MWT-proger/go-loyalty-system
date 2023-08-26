@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
@@ -20,15 +18,15 @@ func (d *UserRegister) IsValid() bool {
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
-
 	var data UserRegister
-	newUser := models.NewUser()
 
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
 	}
 
+	newUser := models.NewUser()
 	newUser.Login = data.Login
+
 	args := map[string]interface{}{"login": newUser.Login}
 	obj, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
 
@@ -50,24 +48,22 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.UserStore.Insert(context.TODO(), newUser)
-	fmt.Println(newUser)
+
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	// TODO: генерить токен
-	// TODO: авторизовывать пользователя
+	tokenString, err := auth.BuildJWTString(newUser.ID)
 
-	resp, err := json.Marshal(newUser)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	auth.SetAuthTokenToCookie(w, tokenString)
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
 
 }
 
