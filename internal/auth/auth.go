@@ -9,7 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
+	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 )
+
+const NameCookie = "token"
 
 type Claims struct {
 	jwt.RegisteredClaims
@@ -79,9 +82,37 @@ func BuildJWTString(UserID uuid.UUID) (string, error) {
 	return tokenString, nil
 }
 
+// SetAuthTokenToCookie(w http.ResponseWriter, token string) добавляет
+// в cookies токен авторизации
 func SetAuthTokenToCookie(w http.ResponseWriter, token string) {
-	newCookie := http.Cookie{Name: "token"}
+	newCookie := http.Cookie{Name: NameCookie}
 	newCookie.Value = token
 	http.SetCookie(w, &newCookie)
 
+}
+
+// GetUserID(tokenString string) (uuid.UUID, error) Проверяет токен
+// и в случае успеха возвращает из полезной нагрузки UserID
+func GetUserID(tokenString string) uuid.UUID {
+
+	claims := &Claims{}
+	conf := configs.GetConfig()
+
+	token, err := jwt.ParseWithClaims(tokenString, claims,
+		func(t *jwt.Token) (interface{}, error) {
+			return []byte(conf.Auth.SecretKey), nil
+		})
+
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return uuid.Nil
+	}
+
+	if !token.Valid {
+		logger.Log.Debug("Token is not valid")
+		return uuid.Nil
+	}
+
+	logger.Log.Debug("Token is valid")
+	return claims.UserID
 }
