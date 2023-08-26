@@ -27,6 +27,22 @@ func (h *APIHandler) unmarshalBody(body io.ReadCloser, form interface{}) error {
 	return nil
 }
 
+// getTextBody(body io.ReadCloser) (string, error)
+// возвращает текст из тела запроса
+func (h *APIHandler) getTextBody(body io.ReadCloser) (string, error) {
+
+	defer body.Close()
+
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(body)
+
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
 // getBodyData(w http.ResponseWriter, r *http.Request, data BaseBodyDater) bool
 // записывает данные из тела в переменную и проверяет её валидность
 // в случае не удачи записывает статус BadRequest
