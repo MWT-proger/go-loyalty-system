@@ -4,13 +4,17 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
+	"github.com/MWT-proger/go-loyalty-system/internal/gzip"
 	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
+	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 )
 
 // Router() Перенаправляет запросы на необходимые хендлеры
 func Router(h *handlers.APIHandler) *chi.Mux {
 
 	r := chi.NewRouter()
+	r.Use(logger.RequestLogger)
+	r.Use(gzip.GzipMiddleware)
 
 	r.Post("/api/user/register", h.UserRegister)
 	r.Post("/api/user/login", h.UserLogin)
