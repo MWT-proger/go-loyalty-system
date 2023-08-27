@@ -15,7 +15,7 @@ type GetFirstByParametersStore[E models.BaseModeler] struct {
 }
 
 type GetFirstByParameterser[E models.BaseModeler] interface {
-	GetFirstByParameters(ctx context.Context, args map[string]interface{}) ([]E, error)
+	GetFirstByParameters(ctx context.Context, args map[string]interface{}) (E, error)
 }
 
 func NewGetFirstByParametersStore[E models.BaseModeler](baseStorage *Store, baseSelectQuery string) *GetFirstByParametersStore[E] {
@@ -24,7 +24,7 @@ func NewGetFirstByParametersStore[E models.BaseModeler](baseStorage *Store, base
 
 // GetFirstByParameters(ctx context.Context, args map[string]interface{}) (*E, error) общий метод
 // возвращает первую строку из хранилища удовлетворяющею параметрам
-func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context, args map[string]interface{}) ([]E, error) {
+func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context, args map[string]interface{}) (E, error) {
 	var obj E
 	list := []E{}
 
@@ -47,18 +47,28 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 
 	if err != nil {
 		logger.Log.Error(err.Error())
-		return nil, err
+		return obj, err
 	}
 
 	defer stmt.Close()
 
 	if err := stmt.SelectContext(ctx, &list, args); err != nil {
 		logger.Log.Error(err.Error())
-		return nil, err
+		return obj, err
 	}
+
+	if len(list) > 0 {
+		obj = list[0]
+	}
+
+	// if len(list) == 0 {
+	// 	return obj, errors.New("obj not found")
+	// }
+
+	// obj = list[0]
 
 	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetFirstByParameters - ок")
 
-	return list, nil
+	return obj, nil
 
 }

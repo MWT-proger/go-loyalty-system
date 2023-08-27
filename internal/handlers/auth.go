@@ -28,14 +28,14 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	newUser.Login = data.Login
 
 	args := map[string]interface{}{"login": newUser.Login}
-	objs, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+	obj, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	if len(objs) > 0 {
+	if obj != nil {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
@@ -76,18 +76,17 @@ func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	args := map[string]interface{}{"login": data.Login}
-	objs, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+	user, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	if len(objs) == 0 {
+	if user == nil {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
-	user := objs[0]
 
 	if ok := auth.CheckPasswordHash(data.Password, user.Password); !ok {
 		http.Error(w, "", http.StatusUnauthorized)

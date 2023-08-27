@@ -46,14 +46,14 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	args := map[string]interface{}{"number": data.Number}
-	objs, err := h.OrderStore.GetFirstByParameters(context.TODO(), args)
+	obj, err := h.OrderStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	if len(objs) > 0 {
+	if obj != nil {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
