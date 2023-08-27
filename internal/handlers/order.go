@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -73,5 +74,35 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := request.UserIDFrom(r.Context())
+
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	args := map[string]interface{}{"user_id": userID}
+	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), args)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if len(objs) == 0 {
+		http.Error(w, "", http.StatusNoContent)
+		return
+	}
+
+	resp, err := json.Marshal(objs)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 
 }

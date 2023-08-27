@@ -9,11 +9,13 @@ type OrderStore struct {
 	*store.Store
 	*store.InsertStore[*models.Order]
 	*store.GetFirstByParametersStore[*models.Order]
+	*store.GetAllByParametersStore[*models.Order]
 }
 
 type OrderStorer interface {
 	store.Inserter[*models.Order]
 	store.GetFirstByParameterser[*models.Order]
+	store.GetAllByParameterser[*models.Order]
 }
 
 func New(baseStorage *store.Store) *OrderStore {
@@ -22,6 +24,7 @@ func New(baseStorage *store.Store) *OrderStore {
 
 	insertStore := store.NewInsertStore[*models.Order](baseStorage, insertQuery)
 	getFirst := store.NewGetFirstByParametersStore[*models.Order](baseStorage, baseSelectQueryFirst)
+	getAll := store.NewGetAllByParametersStore[*models.Order](baseStorage, baseSelectQueryFirst)
 
-	return &OrderStore{baseStorage, insertStore, getFirst}
+	return &OrderStore{baseStorage, insertStore, getFirst, getAll}
 }
