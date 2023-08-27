@@ -12,6 +12,8 @@ jobs:
 
   statictest:
     runs-on: ubuntu-latest
+    env:
+      GO111MODULE: off
     steps:
       - name: Set up Go
         uses: actions/setup-go@v4
