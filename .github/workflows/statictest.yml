@@ -27,7 +27,7 @@ jobs:
         run: go mod verify
       
       - name: Install dep
-        run: go get .
+        run: go run ./cmd/gophermart
       
       - name: tttt
         run: echo $HOME
