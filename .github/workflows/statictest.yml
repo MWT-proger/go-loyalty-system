@@ -15,14 +15,14 @@ jobs:
     env:
       GO111MODULE: "auto"
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.20.4
       
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Verify dependencies
         run: go mod verify
       
