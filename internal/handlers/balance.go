@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
+	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/request"
@@ -17,12 +20,58 @@ type WithdrawForm struct {
 	Sum   int64  `json:"sum"`
 }
 
+type UserBalance struct {
+	Current   int64 `json:"current"`
+	Withdrawn int64 `json:"withdrawn"`
+}
+
 func (d *WithdrawForm) IsValid() bool {
 	return luhn.Validate(d.Order)
 
 }
 
 func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := request.UserIDFrom(r.Context())
+
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	args := map[string]interface{}{"user_id": userID}
+
+	sumAmmount, err := h.OrderStore.GetSumByParameters(context.TODO(), args)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	sumWithdrawn, err := h.WithdrawalStore.GetSumByParameters(context.TODO(), args)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	userBalance := UserBalance{
+		Current:   sumAmmount - sumWithdrawn,
+		Withdrawn: sumWithdrawn,
+	}
+
+	resp, err := json.Marshal(userBalance)
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+
+	logger.Log.Debug("", zap.Int64("ammount", sumAmmount), zap.Int64("withdrawn", sumWithdrawn))
 
 }
 
