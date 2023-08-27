@@ -29,9 +29,7 @@ jobs:
         run: |
           chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
           mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
-      - name: Install dependencies
-        run: go get .
-
+          
       - name: Run statictest
         run: |
-          go vet -vettool=$(which statictest) ./...
+          go vet -vettool=$(which statictest) ../...
