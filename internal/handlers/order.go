@@ -55,8 +55,15 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if obj != nil {
-		http.Error(w, "", http.StatusConflict)
+
+		if obj.UserID != userID {
+			http.Error(w, "", http.StatusConflict)
+			return
+		}
+
+		http.Error(w, "", http.StatusOK)
 		return
+
 	}
 
 	newOrder := models.NewOrder()
