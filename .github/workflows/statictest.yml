@@ -26,6 +26,9 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
       
+      - name: Install dep
+        run: go get .
+      
       - name: tttt
         run: echo $HOME
 
