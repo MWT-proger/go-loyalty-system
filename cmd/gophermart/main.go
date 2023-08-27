@@ -11,6 +11,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
+	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
 )
 
 var storage store.Store
@@ -55,7 +56,8 @@ func run(ctx context.Context) error {
 	}
 	userStore := userstore.New(&storage)
 	orderstore := orderstore.New(&storage)
-	h, err := handlers.NewAPIHandler(userStore, orderstore)
+	withdrawalstore := withdrawalstore.New((&storage))
+	h, err := handlers.NewAPIHandler(userStore, orderstore, withdrawalstore)
 
 	if err != nil {
 		return err
