@@ -29,9 +29,9 @@ func (*Order) GetType() string {
 	return "Order"
 }
 
-func (d *Order) GetArgsInsert() []any {
+func (s *Order) GetArgsInsert() []any {
 
-	return []any{d.ID, d.Number, d.UserID, d.UpdatedAt, d.CreatedAt}
+	return []any{s.ID, s.Number, s.UserID, s.UpdatedAt, s.CreatedAt}
 }
 
 func (s *Order) MarshalJSON() ([]byte, error) {

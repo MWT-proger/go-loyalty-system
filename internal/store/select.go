@@ -31,7 +31,7 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetFirstByParameters...")
 	var values []string
 
-	for n, _ := range args {
+	for n := range args {
 
 		params := fmt.Sprintf("%s=:%s", n, n)
 
@@ -86,7 +86,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetAllByParameters...")
 	var values []string
 
-	for n, _ := range args {
+	for n := range args {
 		params := fmt.Sprintf("%s=:%s", n, n)
 
 		values = append(values, params)
