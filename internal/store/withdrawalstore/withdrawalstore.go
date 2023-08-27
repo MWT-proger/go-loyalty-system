@@ -7,14 +7,14 @@ import (
 
 type WithdrawalStore struct {
 	*store.Store
-	*store.InsertStore[*models.Withdrawal]
+	*InsertStore
 	*store.GetFirstByParametersStore[*models.Withdrawal]
 	*store.GetAllByParametersStore[*models.Withdrawal]
 	*store.GetSumByParametersStore[*models.Withdrawal]
 }
 
 type WithdrawalStorer interface {
-	store.Inserter[*models.Withdrawal]
+	Inserter
 	store.GetFirstByParameterser[*models.Withdrawal]
 	store.GetAllByParameterser[*models.Withdrawal]
 	store.GetSumByParameterser[*models.Withdrawal]
@@ -25,7 +25,7 @@ func New(baseStorage *store.Store) *WithdrawalStore {
 	baseSelectQueryFirst := "SELECT * FROM content.withdrawal WHERE "
 	sumSelectQueryFirst := "SELECT sum(bonuses) FROM content.withdrawal WHERE "
 
-	insertStore := store.NewInsertStore[*models.Withdrawal](baseStorage, insertQuery)
+	insertStore := NewInsertStore(baseStorage, insertQuery)
 	getFirst := store.NewGetFirstByParametersStore[*models.Withdrawal](baseStorage, baseSelectQueryFirst)
 	getAll := store.NewGetAllByParametersStore[*models.Withdrawal](baseStorage, baseSelectQueryFirst)
 	sumNumber := store.NewGetSumByParametersStore[*models.Withdrawal](baseStorage, sumSelectQueryFirst)

@@ -4,12 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
-	"go.uber.org/zap"
-
-	"github.com/MWT-proger/go-loyalty-system/internal/logger"
+	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/request"
@@ -41,26 +40,26 @@ func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	args := map[string]interface{}{"user_id": userID}
 
-	sumAmmount, err := h.OrderStore.GetSumByParameters(context.TODO(), args)
+	obj, err := h.AccountStore.GetFirstByParameters(context.TODO(), args)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	sumWithdrawn, err := h.WithdrawalStore.GetSumByParameters(context.TODO(), args)
+	if obj == nil {
 
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
+		obj = models.NewAccount()
+		obj.UserID = userID
+
+		if err := h.AccountStore.Insert(context.TODO(), obj); err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 	}
 
-	userBalance := UserBalance{
-		Current:   sumAmmount - sumWithdrawn,
-		Withdrawn: sumWithdrawn,
-	}
-
-	resp, err := json.Marshal(userBalance)
+	resp, err := json.Marshal(obj)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -70,8 +69,6 @@ func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
-
-	logger.Log.Debug("", zap.Int64("ammount", sumAmmount), zap.Int64("withdrawn", sumWithdrawn))
 
 }
 
@@ -123,6 +120,12 @@ func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Requ
 	err = h.WithdrawalStore.Insert(context.TODO(), newWithdrawal)
 
 	if err != nil {
+
+		if errors.Is(err, &lErrors.ErrorNotBonuses{}) {
+			http.Error(w, "", http.StatusPaymentRequired)
+			return
+		}
+
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
