@@ -49,12 +49,15 @@ func (s *Order) MarshalJSON() ([]byte, error) {
 
 	custumOrder := &struct {
 		*Alias
-		Accural   int64  `json:"accural"`
-		CreatedAt string `json:"uploaded_at"`
+		Accural   float64 `json:"accural"`
+		CreatedAt string  `json:"uploaded_at"`
 	}{
-		Accural:   s.Bonuses.Int64,
+
 		Alias:     (*Alias)(s),
 		CreatedAt: s.CreatedAt.Format(time.RFC3339),
+	}
+	if s.Bonuses.Int64 > 0 {
+		custumOrder.Accural = float64(s.Bonuses.Int64) / 100
 	}
 
 	return json.Marshal(custumOrder)

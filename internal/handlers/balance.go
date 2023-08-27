@@ -16,12 +16,28 @@ import (
 
 type WithdrawForm struct {
 	Order string `json:"order"`
-	Sum   int64  `json:"sum"`
+	Sum   int64  `json:"-"`
 }
 
-type UserBalance struct {
-	Current   int64 `json:"current"`
-	Withdrawn int64 `json:"withdrawn"`
+func (d *WithdrawForm) UnmarshalJSON(data []byte) error {
+
+	type alias WithdrawForm
+
+	aliasValue := &struct {
+		*alias
+		Sum float64 `json:"sum"`
+	}{
+		alias: (*alias)(d),
+	}
+
+	if err := json.Unmarshal(data, aliasValue); err != nil {
+		return err
+	}
+
+	d.Sum = int64(aliasValue.Sum * 100)
+
+	return nil
+
 }
 
 func (d *WithdrawForm) IsValid() bool {

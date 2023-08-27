@@ -31,14 +31,16 @@ func (d *Withdrawal) MarshalJSON() ([]byte, error) {
 
 	custumWithdrawal := &struct {
 		*Alias
-		Order     string `json:"order"`
-		Sum       int64  `json:"sum"`
-		CreatedAt string `json:"processed_at"`
+		Order     string  `json:"order"`
+		Sum       float64 `json:"sum"`
+		CreatedAt string  `json:"processed_at"`
 	}{
 		Alias:     (*Alias)(d),
 		Order:     d.Number,
-		Sum:       d.Bonuses.Int64,
 		CreatedAt: d.CreatedAt.Format(time.RFC3339),
+	}
+	if d.Bonuses.Int64 > 0 {
+		custumWithdrawal.Sum = float64(d.Bonuses.Int64) / 100
 	}
 
 	return json.Marshal(custumWithdrawal)

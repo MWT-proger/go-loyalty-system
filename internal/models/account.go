@@ -31,12 +31,17 @@ func (s *Account) MarshalJSON() ([]byte, error) {
 
 	custumAccount := &struct {
 		*Alias
-		Current   int64 `json:"current"`
-		Withdrawn int64 `json:"withdrawn"`
+		Current   float64 `json:"current"`
+		Withdrawn float64 `json:"withdrawn"`
 	}{
-		Alias:     (*Alias)(s),
-		Withdrawn: s.Withdrawn.Int64,
-		Current:   s.Current.Int64,
+		Alias: (*Alias)(s),
+	}
+
+	if s.Current.Int64 > 0 {
+		custumAccount.Current = float64(s.Current.Int64) / 100
+	}
+	if s.Withdrawn.Int64 > 0 {
+		custumAccount.Withdrawn = float64(s.Withdrawn.Int64) / 100
 	}
 
 	return json.Marshal(custumAccount)
