@@ -37,8 +37,7 @@ jobs:
       - name: Setup autotest binary
         run: |
           chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
-          mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
 
       - name: Run statictest
         run: |
-          go vet -vettool=$(which statictest) ./...
+          go vet -vettool=$GITHUB_WORKSPACE/.tools/statictest $GITHUB_WORKSPACE/...
