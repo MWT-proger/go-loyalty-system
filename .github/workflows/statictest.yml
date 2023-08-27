@@ -12,7 +12,8 @@ jobs:
 
   statictest:
     runs-on: ubuntu-latest
-    container: golang:latest
+    container: 
+      image: golang:1.20.7-alpine3.17
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
