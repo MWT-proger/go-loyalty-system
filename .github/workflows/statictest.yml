@@ -32,7 +32,7 @@ jobs:
           repository: Yandex-Practicum/go-autotests-bin
           latest: true
           fileName: statictest
-          out-file-path: .tools
+          out-file-path: tools
 
       - name: Setup autotest binary
         run: |
@@ -40,4 +40,4 @@ jobs:
 
       - name: Run statictest
         run: |
-          go vet -vettool=$GITHUB_WORKSPACE/.tools/statictest $GITHUB_WORKSPACE/...
+          go vet -vettool=tools/statictest ./...
