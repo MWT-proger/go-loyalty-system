@@ -12,15 +12,24 @@ jobs:
 
   statictest:
     runs-on: ubuntu-latest
-    container: golang:1.20.4
+    env:
+      GO111MODULE: "auto"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20.4
+
+      - name: Verify dependencies
+        run: go mod verify
+
       - name: Setup autotest binary
         run: |
-          chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
+          chmod -R +x $GITHUB_WORKSPACE/tools/statictest
 
       - name: Run statictest
         run: |
-          go vet -vettool=./.tools/statictest ./...
+          go vet -vettool=./tools/statictest ./...
