@@ -1,0 +1,299 @@
+openapi: 3.0.0
+info:
+  title: Накопительная система лояльности «Гофермарт» API
+  version: 1.0.0
+  description: |-
+    Система представляет собой HTTP API со следующими требованиями к бизнес-логике:
+
+    * регистрация, аутентификация и авторизация пользователей;
+    * приём номеров заказов от зарегистрированных пользователей;
+    * учёт и ведение списка переданных номеров заказов зарегистрированного пользователя;
+    * учёт и ведение накопительного счёта зарегистрированного пользователя;
+    * проверка принятых номеров заказов через систему расчёта баллов лояльности;
+    * начисление за каждый подходящий номер заказа положенного вознаграждения на счёт лояльности пользователя.
+  termsOfService: http://localhost
+  contact:
+    email: mwtech@mail.ru
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: http://localhost:7000
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - "*"
+  allowCredentials: true
+  exposeHeaders:
+    - "x-apigateway-header"
+    - "x-amz-date"
+    - "content-type"
+  maxAge: 3600
+  allowMethods:
+    - "*"
+  allowHeaders":
+    - "x-apigateway-header"
+    - "x-amz-date"
+    - "content-type"
+    - "Authorization"
+tags:
+  - name: User
+    description: Регистрация и авторизация пользователя
+    externalDocs:
+      description: Читать больше
+      url: http://localhost
+  - name: Orders
+    description: Работа с заказами пользователя
+    externalDocs:
+      description: Читать больше
+      url: http://localhost
+  - name: Balance
+    description: Работа с балансом пользователя
+    externalDocs:
+      description: Читать больше
+      url: http://localhost
+paths:
+  /api/user/register:
+    
+    post:
+      tags:
+        - User
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUser'
+      responses:
+        '200':
+          description: Успешная регистрация и аутентификация
+        '400':
+          description: Неверный формат запроса
+        '409':
+          description: Логин уже занят
+        '500':
+          description: Внутренняя ошибка сервера
+  /api/user/login:
+    post:
+      tags:
+        - User
+      summary: Аутентификация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUser'
+      responses:
+        '200':
+          description: Успешная аутентификация
+        '400':
+          description: Неверный формат запроса
+        '409':
+          description: Неверная пара логин/пароль
+        '500':
+          description: Внутренняя ошибка сервера
+  /api/user/orders:
+    post:
+      tags:
+        - Orders
+      summary: Загрузка номера заказа для расчёта
+      description: |-
+        Хендлер доступен только аутентифицированным пользователям. Номером заказа является последовательность цифр произвольной длины.
+        
+        Номер заказа может быть проверен на корректность ввода с помощью [алгоритма Луна](https://ru.wikipedia.org/wiki/Алгоритм_Луна){target="_blank"}.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Номер заказа уже был загружен этим пользователем
+        '202':
+          description: Новый номер заказа принят в обработку
+        '400':
+          description: Неверный формат запроса
+        '401':
+          description: Пользователь не аутентифицирован
+        '409':
+          description: Номер заказа уже был загружен другим пользователем
+        '422':
+          description: Неверный формат номера заказа
+        '500':
+          description: Внутренняя ошибка сервера
+  
+    get:
+      tags:
+        - Orders
+      summary: Получение списка загруженных номеров заказов пользователя
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Список загруженных номеров заказов
+          content:
+            application/json:
+              schema:
+                
+                type: array
+                items:
+                  $ref: '#/components/schemas/NumberOrder'
+        '204':
+          description: Нет данных для ответа
+        '401':
+          description: Пользователь не авторизован
+        '500':
+          description: Внутренняя ошибка сервера
+  /api/user/balance:
+    get:
+      tags:
+        - Balance
+      summary: Получение текущего баланса счёта баллов лояльности пользователя
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Успешная обработка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentBalance'
+                
+        '401':
+          description: Пользователь не авторизован
+        '500':
+          description: Внутренняя ошибка сервера
+  /api/user/balance/withdraw:
+    post:
+      tags:
+        - Balance
+      summary: Запрос на списание баллов с накопительного счёта
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Withdraw'
+              
+      responses:
+        '200':
+          description: Успешная обработка запроса
+        '401':
+          description: Пользователь не авторизован
+        '402':
+          description: На счету недостаточно средств
+        '422':
+          description: Неверный номер заказа
+        '500':
+          description: Внутренняя ошибка сервера
+  /api/user/withdrawals:
+    get:
+      tags:
+        - Balance
+      summary: Получение информации о выводе средств с накопительного счёта пользователем
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: успешная обработка запроса
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserWithdrawal'
+                  
+        '204':
+          description: Нет ни одного списания
+        '401':
+          description: Пользователь не авторизован
+        '500':
+          description: Внутренняя ошибка сервера
+
+components:
+  schemas:
+    AuthUser:
+      xml:
+        name: auth_user
+      type: object
+      properties:
+        login:
+          type: string
+          example: ivan
+        password:
+          type: string
+          example: Ivan@asdsl123
+
+    NumberOrder:
+      xml:
+        name: number_order
+      type: object
+      properties:
+        number:
+          type: string
+          example: 9278923470
+        status:
+          type: string
+          enum: [NEW, PROCESSING, INVALID, PROCESSED]
+        accrual:
+          type: number
+          example: 500
+        uploaded_at:
+          type: string
+          format: date-time
+          example: 2020-12-10T15:15:45+03:00
+
+    CurrentBalance:
+      xml:
+        name: current_balance
+      type: object
+      properties:
+        current:
+          type: number
+          example: 500.5
+        withdrawn:
+          type: number
+          example: 42
+      
+    Withdraw:
+      xml:
+        name: withdraw
+      type: object
+      properties:
+        order:
+          type: string
+          example: 2377225624
+        sum:
+          type: number
+          example: 751
+
+    UserWithdrawal:
+      xml:
+        name: user_withdrawal
+      type: object
+      properties:
+        order:
+          type: string
+          example: 2377225624
+        sum:
+          type: number
+          example: 500
+        processed_at:
+          type: string
+          format: date-time
+          example: 2020-12-09T16:09:57+03:00
+  
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
