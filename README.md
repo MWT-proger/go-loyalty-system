@@ -34,7 +34,12 @@ POSTGRES_PORT=5432
 ```bash
   docker compose -f deployments/docker-compose.yaml --env-file deployments/.env up
 ```
-5. Запустите систему лояльности
+5. Запустите систему расчёта вознаграждений «Гофермарт»
 ```
-go run ./cmd/gophermart -a "localhost:7000" -d "user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable"
+cmd/accrual/accrual_linux_amd64 -a :6000
 ```
+6. Запустите систему лояльности
+```
+go run ./cmd/gophermart -a "localhost:7000" -d "user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable" -r "http://localhost:6000"
+```
+
