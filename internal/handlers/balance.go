@@ -12,6 +12,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/request"
+	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
 type WithdrawForm struct {
@@ -159,7 +160,7 @@ func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.R
 	}
 
 	args := map[string]interface{}{"user_id": userID}
-	objs, err := h.WithdrawalStore.GetAllByParameters(context.TODO(), args)
+	objs, err := h.WithdrawalStore.GetAllByParameters(context.TODO(), &store.OptionsSelect{Args: args})
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)

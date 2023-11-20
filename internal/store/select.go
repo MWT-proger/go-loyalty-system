@@ -4,11 +4,19 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 )
+
+type OptionsSelect struct {
+	Args        map[string]interface{}
+	Limit       int
+	OrderBy     string
+	DescOrderBy bool
+}
 
 type GetFirstByParametersStore[E models.BaseModeler] struct {
 	*Store
@@ -40,7 +48,7 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 		values = append(values, params)
 	}
 
-	query := s.baseSelectQuery + strings.Join(values, " AND ") + ` LIMIT 1 ;`
+	query := s.baseSelectQuery + "WHERE " + strings.Join(values, " AND ") + ` LIMIT 1 ;`
 	logger.Log.Debug(query)
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 
@@ -72,7 +80,7 @@ type GetAllByParametersStore[E models.BaseModeler] struct {
 }
 
 type GetAllByParameterser[E models.BaseModeler] interface {
-	GetAllByParameters(ctx context.Context, args map[string]interface{}) ([]E, error)
+	GetAllByParameters(ctx context.Context, options *OptionsSelect) ([]E, error)
 }
 
 func NewGetAllByParametersStore[E models.BaseModeler](baseStorage *Store, baseSelectQuery string) *GetAllByParametersStore[E] {
@@ -81,21 +89,41 @@ func NewGetAllByParametersStore[E models.BaseModeler](baseStorage *Store, baseSe
 
 // GetAllByParameters(ctx context.Context, args map[string]interface{}) (*E, error) общий метод
 // возвращает из хранилища все строки удовлетворяющее параметрам
-func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, args map[string]interface{}) ([]E, error) {
+func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, options *OptionsSelect) ([]E, error) {
 	var obj E
 	stringTypeObj := reflect.TypeOf(obj).String()
+	argsBool := false
 	list := []E{}
 
 	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetAllByParameters...")
 	var values []string
 
-	for n := range args {
+	for n := range options.Args {
+		argsBool = true
 		params := fmt.Sprintf("%s=:%s", n, n)
 
 		values = append(values, params)
 	}
 
-	query := s.baseSelectQuery + strings.Join(values, " AND ") + ` ;`
+	query := s.baseSelectQuery
+
+	if argsBool {
+		query += "WHERE " + strings.Join(values, " AND ")
+	}
+
+	if options.OrderBy != "" {
+		query += ` ORDER BY "` + options.OrderBy + `"`
+		if options.DescOrderBy {
+			query += ` DESC`
+		}
+	}
+
+	if options.Limit != 0 {
+		query += " LIMIT " + strconv.Itoa(options.Limit)
+	}
+
+	query += ` ;`
+
 	logger.Log.Debug(query)
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 
@@ -106,7 +134,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 
 	defer stmt.Close()
 
-	if err := stmt.SelectContext(ctx, &list, args); err != nil {
+	if err := stmt.SelectContext(ctx, &list, options.Args); err != nil {
 		logger.Log.Error(err.Error())
 		return nil, err
 	}

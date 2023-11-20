@@ -8,6 +8,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/request"
+	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
 type OrderForm struct {
@@ -92,7 +93,7 @@ func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	args := map[string]interface{}{"user_id": userID}
-	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), args)
+	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), &store.OptionsSelect{Args: args})
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)

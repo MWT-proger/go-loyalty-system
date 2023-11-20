@@ -22,7 +22,7 @@ type OrderStorer interface {
 
 func New(baseStorage *store.Store) *OrderStore {
 	insertQuery := "INSERT INTO content.order (id, number, user_id, updated_at, created_at) VALUES($1,$2,$3,$4,$5)"
-	baseSelectQueryFirst := "SELECT * FROM content.order WHERE "
+	baseSelectQueryFirst := "SELECT * FROM content.order "
 	sumSelectQueryFirst := "SELECT sum(bonuses) FROM content.order WHERE "
 
 	insertStore := store.NewInsertStore[*models.Order](baseStorage, insertQuery)

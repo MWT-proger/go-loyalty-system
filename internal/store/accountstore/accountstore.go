@@ -18,7 +18,7 @@ type AccountStorer interface {
 
 func New(baseStorage *store.Store) *AccountStore {
 	insertQuery := "INSERT INTO content.account (id, user_id, updated_at, created_at) VALUES($1,$2,$3,$4)"
-	baseSelectQueryFirst := "SELECT * FROM content.account WHERE "
+	baseSelectQueryFirst := "SELECT * FROM content.account "
 
 	insertStore := store.NewInsertStore[*models.Account](baseStorage, insertQuery)
 	getFirst := store.NewGetFirstByParametersStore[*models.Account](baseStorage, baseSelectQueryFirst)
