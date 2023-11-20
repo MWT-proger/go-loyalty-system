@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
@@ -27,8 +28,7 @@ func NewGetFirstByParametersStore[E models.BaseModeler](baseStorage *Store, base
 func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context, args map[string]interface{}) (E, error) {
 	var obj E
 	list := []E{}
-
-	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetFirstByParameters...")
+	logger.Log.Debug("Хранилище: " + reflect.TypeOf(obj).String() + ": GetFirstByParameters...")
 	var values []string
 
 	for n := range args {
@@ -58,7 +58,7 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 		obj = list[0]
 	}
 
-	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetFirstByParameters - ок")
+	logger.Log.Debug("Хранилище: " + reflect.TypeOf(obj).String() + ": GetFirstByParameters - ок")
 
 	return obj, nil
 
@@ -83,7 +83,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 	var obj E
 	list := []E{}
 
-	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetAllByParameters...")
+	logger.Log.Debug("Хранилище: " + reflect.TypeOf(obj).String() + ": GetAllByParameters...")
 	var values []string
 
 	for n := range args {
@@ -108,7 +108,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 		return nil, err
 	}
 
-	logger.Log.Debug("Хранилище:" + obj.GetType() + ": GetAllByParameters - ок")
+	logger.Log.Debug("Хранилище: " + reflect.TypeOf(obj).String() + ": GetAllByParameters - ок")
 
 	return list, nil
 
