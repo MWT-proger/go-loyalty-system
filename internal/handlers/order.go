@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
@@ -16,6 +15,9 @@ type OrderForm struct {
 }
 
 func (d *OrderForm) IsValid() bool {
+	if d.Number == "" {
+		return false
+	}
 	return luhn.Validate(d.Number)
 }
 
@@ -76,7 +78,7 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(newOrder)
+
 	w.WriteHeader(http.StatusAccepted)
 }
 
