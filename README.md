@@ -2,6 +2,9 @@
 
 [Техническое задание](docs/SPECIFICATION.md) для ознакомления с проектом
 
+[Документация OpenAPI mwt-proger.github.io/go-loyalty-system](https://mwt-proger.github.io/go-loyalty-system/) запущена для работы с localhost
+
+
 ## Развертывание проекта
 
 1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
