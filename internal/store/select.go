@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
@@ -26,9 +27,10 @@ func NewGetFirstByParametersStore[E models.BaseModeler](baseStorage *Store, base
 // возвращает первую строку из хранилища удовлетворяющею параметрам
 func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context, args map[string]interface{}) (E, error) {
 	var obj E
+	stringTypeObj := reflect.TypeOf(obj).String()
 	list := []E{}
 
-	logger.Log.Debug("Хранилище: GetFirstByParameters...")
+	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetFirstByParameters...")
 	var values []string
 
 	for n := range args {
@@ -58,7 +60,7 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 		obj = list[0]
 	}
 
-	logger.Log.Debug("Хранилище: GetFirstByParameters - ок")
+	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetFirstByParameters - ок")
 
 	return obj, nil
 
@@ -80,9 +82,11 @@ func NewGetAllByParametersStore[E models.BaseModeler](baseStorage *Store, baseSe
 // GetAllByParameters(ctx context.Context, args map[string]interface{}) (*E, error) общий метод
 // возвращает из хранилища все строки удовлетворяющее параметрам
 func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, args map[string]interface{}) ([]E, error) {
+	var obj E
+	stringTypeObj := reflect.TypeOf(obj).String()
 	list := []E{}
 
-	logger.Log.Debug("Хранилище: GetAllByParameters...")
+	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetAllByParameters...")
 	var values []string
 
 	for n := range args {
@@ -107,7 +111,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 		return nil, err
 	}
 
-	logger.Log.Debug("Хранилище: GetAllByParameters - ок")
+	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetAllByParameters - ок")
 
 	return list, nil
 
