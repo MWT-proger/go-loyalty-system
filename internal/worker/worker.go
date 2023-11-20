@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -80,12 +81,15 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string) (*InfoOrder, error) {
 }
 
 func (w *WorkerAccural) GetOrderLimit() ([]*models.Order, error) {
-
-	args := map[string]interface{}{}
+	args := map[string]interface{}{
+		// решить как ше передавать оператор __ин
+		// "status__in": []models.StatusOrder{models.New, models.Processing},
+	}
 
 	objs, err := w.OrderStore.GetAllByParameters(
 		context.TODO(),
 		&store.OptionsSelect{
+			// добавить фильтр по статусу ("NEW" "PROCESSING")
 			Args: args, Limit: 10, OrderBy: "updated_at", DescOrderBy: true,
 		})
 
@@ -94,6 +98,24 @@ func (w *WorkerAccural) GetOrderLimit() ([]*models.Order, error) {
 	}
 
 	return objs, nil
+}
+
+func (w *WorkerAccural) CheckInfoAndUpdateOrder() error {
+
+	objs, _ := w.GetOrderLimit()
+
+	for _, obj := range objs {
+		info, err := w.GetInfoOrder(obj.Number)
+
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(info)
+		}
+
+	}
+
+	return nil
 }
 
 func (w *WorkerAccural) unmarshalBody(body io.ReadCloser, form interface{}) error {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
@@ -69,13 +68,8 @@ func run(ctx context.Context) error {
 
 	w, err := worker.NewWorkerAccural(orderstore, withdrawalstore, accountstore)
 
-	// Временный блок
-	fmt.Println(w.GetInfoOrder("4688661433521853"))
-	objs, _ := w.GetOrderLimit()
-	for _, obj := range objs {
-		fmt.Println(obj.UpdatedAt)
-	}
-	fmt.Println(w.GetOrderLimit())
+	// Временный блок ()запускать в горутине бесконечный цикл
+	w.CheckInfoAndUpdateOrder()
 	// Временный блок
 
 	if err != nil {
