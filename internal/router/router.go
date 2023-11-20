@@ -2,7 +2,9 @@ package router
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 
+	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
 	"github.com/MWT-proger/go-loyalty-system/internal/gzip"
 	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
@@ -11,9 +13,17 @@ import (
 
 // Router() Перенаправляет запросы на необходимые хендлеры
 func Router(h *handlers.APIHandler) *chi.Mux {
+	conf := configs.GetConfig()
 
 	r := chi.NewRouter()
 	r.Use(logger.RequestLogger)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   conf.Cors.AllowedOrigins,
+		AllowedMethods:   conf.Cors.AllowedMethods,
+		AllowedHeaders:   conf.Cors.AllowedHeaders,
+		AllowCredentials: conf.Cors.AllowCredentials,
+		Debug:            conf.Cors.Debug,
+	}))
 	r.Use(gzip.GzipMiddleware)
 
 	r.Post("/api/user/register", h.UserRegister)

@@ -70,6 +70,13 @@ paths:
       responses:
         '200':
           description: Успешная регистрация и аутентификация
+          headers:
+            Set-Cookie:
+              description: >
+                Содержит сессионный файл cookie с именем token. 
+                Передавайте этот файл cookie обратно в последующих запросах.
+              schema:
+                type: string
         '400':
           description: Неверный формат запроса
         '409':
@@ -90,6 +97,13 @@ paths:
       responses:
         '200':
           description: Успешная аутентификация
+          headers:
+            Set-Cookie:
+              description: >
+                Содержит сессионный файл cookie с именем token. 
+                Передавайте этот файл cookie обратно в последующих запросах.
+              schema:
+                type: string
         '400':
           description: Неверный формат запроса
         '409':
