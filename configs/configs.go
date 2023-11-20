@@ -34,7 +34,7 @@ func InitConfig() *Config {
 		AccuralSystemAddress: "localhost:7000",
 		Auth:                 AuthConfig{SecretKey: "supersecretkey"},
 		Cors: CorsConfig{
-			AllowedOrigins: []string{"http://localhost:7000", "http://localhost:18512"},
+			AllowedOrigins: []string{"*"},
 			AllowedMethods: []string{"POST", "OPTIONS", "GET"},
 			AllowedHeaders: []string{
 				"Authorization",
@@ -46,7 +46,7 @@ func InitConfig() *Config {
 				"X-CSRF-Token",
 			},
 			AllowCredentials: true,
-			Debug:            false,
+			Debug:            true,
 		},
 	}
 	return &newConfig
