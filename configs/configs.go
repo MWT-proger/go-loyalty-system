@@ -5,6 +5,13 @@ import "os"
 type AuthConfig struct {
 	SecretKey string
 }
+type CorsConfig struct {
+	AllowedOrigins   []string
+	AllowedMethods   []string
+	AllowedHeaders   []string
+	AllowCredentials bool
+	Debug            bool
+}
 
 type Config struct {
 	HostServer           string `env:"RUN_ADDRESS"`
@@ -12,6 +19,7 @@ type Config struct {
 	DatabaseDSN          string `env:"DATABASE_URI"`
 	AccuralSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	Auth                 AuthConfig
+	Cors                 CorsConfig
 }
 
 var newConfig Config
@@ -25,6 +33,21 @@ func InitConfig() *Config {
 		DatabaseDSN:          "",
 		AccuralSystemAddress: "localhost:7000",
 		Auth:                 AuthConfig{SecretKey: "supersecretkey"},
+		Cors: CorsConfig{
+			AllowedOrigins: []string{"*"},
+			AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+			AllowedHeaders: []string{
+				"Authorization",
+				"Content-Type",
+				"Accept",
+				"Origin",
+				"Access-Control-Request-Method",
+				"Access-Control-Request-Headers",
+				"X-CSRF-Token",
+			},
+			AllowCredentials: true,
+			Debug:            true,
+		},
 	}
 	return &newConfig
 }
