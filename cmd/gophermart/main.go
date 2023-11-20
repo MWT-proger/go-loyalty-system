@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
@@ -13,6 +14,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
+	"github.com/MWT-proger/go-loyalty-system/internal/worker"
 )
 
 var storage store.Store
@@ -60,6 +62,21 @@ func run(ctx context.Context) error {
 	withdrawalstore := withdrawalstore.New(&storage)
 	accountstore := accountstore.New(&storage)
 	h, err := handlers.NewAPIHandler(userStore, orderstore, withdrawalstore, accountstore)
+
+	if err != nil {
+		return err
+	}
+
+	w, err := worker.NewWorkerAccural(orderstore, withdrawalstore, accountstore)
+
+	// Временный блок
+	fmt.Println(w.GetInfoOrder("4688661433521853"))
+	objs, _ := w.GetOrderLimit()
+	for _, obj := range objs {
+		fmt.Println(obj.UpdatedAt)
+	}
+	fmt.Println(w.GetOrderLimit())
+	// Временный блок
 
 	if err != nil {
 		return err
