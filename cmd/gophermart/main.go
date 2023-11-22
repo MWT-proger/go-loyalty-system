@@ -68,9 +68,11 @@ func run(ctx context.Context) error {
 
 	w, err := worker.NewWorkerAccural(orderstore, withdrawalstore, accountstore)
 
-	// Временный блок ()запускать в горутине бесконечный цикл
-	w.CheckInfoAndUpdateOrder()
-	// Временный блок
+	if err != nil {
+		return err
+	}
+
+	err = w.Init(ctx)
 
 	if err != nil {
 		return err

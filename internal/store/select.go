@@ -26,6 +26,7 @@ type FilterParams struct {
 	Value    interface{}
 	Operator OperatorFilterQuery
 }
+
 type OptionsQuery struct {
 	Filter  []FilterParams
 	Sorting []SortingParams
@@ -142,6 +143,10 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, opt
 	return list, nil
 
 }
+
+// preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error)
+// обрабатывает OptionsQuery
+// конструирует зпрос и параметры для БД
 func preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error) {
 	var (
 		query = baseQuery
@@ -195,6 +200,8 @@ func preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, 
 	return formatQuery(&query, &args)
 }
 
+// formatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error)
+// форматирует в правильный вид зпрос и параметры для БД
 func formatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error) {
 
 	query, args, _ := sqlx.Named(*q, *a)
