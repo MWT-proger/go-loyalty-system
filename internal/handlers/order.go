@@ -92,8 +92,10 @@ func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	args := map[string]interface{}{"user_id": userID}
-	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), &store.OptionsSelect{Args: args})
+	filterParams := []store.FilterParams{
+		{Field: "user_id", Value: userID},
+	}
+	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), &store.OptionsQuery{Filter: filterParams})
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
