@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
+	"github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
@@ -40,10 +42,11 @@ type WorkerAccural struct {
 // StatusOrderAccural Статусы
 // варианты поля status ответа сервиса Accrual  GET /api/orders/{order}
 const (
-	Registred  StatusOrderAccural = "REGISTERED"
-	Processing StatusOrderAccural = "PROCESSING"
-	Invaliud   StatusOrderAccural = "INVALID"
-	Processed  StatusOrderAccural = "PROCESSED"
+	NotRegistred StatusOrderAccural = "NOT_REGISTERED"
+	Registred    StatusOrderAccural = "REGISTERED"
+	Processing   StatusOrderAccural = "PROCESSING"
+	Invaliud     StatusOrderAccural = "INVALID"
+	Processed    StatusOrderAccural = "PROCESSED"
 )
 
 func NewWorkerAccural(
@@ -95,15 +98,32 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string) (*InfoOrder, error) {
 	var data InfoOrder
 
 	response, err := w.client.Get(w.baseURL + "/api/orders/" + numberOrder)
-	// TODO: отлавливать различные варианты ответов
 	if err != nil {
 		return nil, err
 	}
 
-	defer response.Body.Close()
+	switch response.StatusCode {
 
-	if err := w.unmarshalBody(response.Body, &data); err != nil {
-		return nil, err
+	case 204:
+		fmt.Println("Нет заказа")
+		data.Order = numberOrder
+		data.Status = NotRegistred
+	case 500:
+		fmt.Println("Ошибка 500")
+		err := errors.ErrorAccrualStatusCode500{}
+		return nil, &err
+	case 429:
+		fmt.Println("превышено количество запросов к сервису")
+		err := errors.ErrorAccrualStatusCode429{}
+		return nil, &err
+	case 200:
+		fmt.Println("Успех")
+		defer response.Body.Close()
+
+		if err := w.unmarshalBody(response.Body, &data); err != nil {
+			return nil, err
+		}
+
 	}
 
 	return &data, nil

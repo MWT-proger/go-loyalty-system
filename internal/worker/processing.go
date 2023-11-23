@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 )
 
@@ -21,8 +22,7 @@ func (w *WorkerAccural) getListOrdersForCheck(ctx context.Context) chan *models.
 		for {
 			select {
 			case <-ctx.Done():
-				// TODO: Необходимо логировать закрытие
-				fmt.Println("Closed")
+				logger.Log.Info("ЗАКРЫТА - Задача получения заказов из БД для проверки начисления.")
 				return
 
 			default:
@@ -54,6 +54,9 @@ func (w *WorkerAccural) getAsyncInfoOrder(ctx context.Context, ordersFromDBCh ch
 		for {
 			// TODO: Необходимо логировать
 			select {
+			case <-ctx.Done():
+				logger.Log.Info("ЗАКРЫТА - Задача получения заказов из Accrual для проверки начисления.")
+				return
 			case obj := <-ordersFromDBCh:
 				infoObj, err := w.GetInfoOrder(obj.Number)
 
@@ -84,6 +87,9 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 		ticker := time.NewTicker(5 * time.Second)
 		for {
 			select {
+			case <-ctx.Done():
+				logger.Log.Info("ЗАКРЫТА - Задача обновления(статусов и начисления) заказов в БД.")
+				return
 			case obj := <-infoOrdersCh:
 				fmt.Println(obj)
 				// TODO: Необходимо логировать
