@@ -49,7 +49,7 @@ func (s *Order) MarshalJSON() ([]byte, error) {
 
 	custumOrder := &struct {
 		*Alias
-		Accural   float64 `json:"accural"`
+		Accural   float64 `json:"accrual"`
 		CreatedAt string  `json:"uploaded_at"`
 	}{
 
