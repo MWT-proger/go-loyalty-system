@@ -7,6 +7,7 @@ import (
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
+	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
 // getListOrdersForCheck служит генаратором потока данных
@@ -14,7 +15,7 @@ import (
 // пока все полученные заказы не обработают и не обновят в БД
 func (w *WorkerAccural) getListOrdersForCheck(ctx context.Context) chan *models.Order {
 
-	ordersFromDBCh := make(chan *models.Order)
+	ordersFromDBCh := make(chan *models.Order, 100)
 
 	go func() {
 		defer close(ordersFromDBCh)
@@ -46,7 +47,7 @@ func (w *WorkerAccural) getListOrdersForCheck(ctx context.Context) chan *models.
 // и возвращает в канал infoOrdersCh
 func (w *WorkerAccural) getAsyncInfoOrder(ctx context.Context, ordersFromDBCh chan *models.Order) chan *InfoOrder {
 
-	infoOrdersCh := make(chan *InfoOrder)
+	infoOrdersCh := make(chan *InfoOrder, 10)
 
 	go func() {
 
@@ -58,13 +59,14 @@ func (w *WorkerAccural) getAsyncInfoOrder(ctx context.Context, ordersFromDBCh ch
 				logger.Log.Info("ЗАКРЫТА - Задача получения заказов из Accrual для проверки начисления.")
 				return
 			case obj := <-ordersFromDBCh:
-				infoObj, err := w.GetInfoOrder(obj.Number)
+				infoObj, err := w.GetInfoOrder(obj.Number, obj.UserID)
 
 				if err != nil {
 					// TODO: Необходимо логировать ошибку
 					fmt.Println(err)
 					continue
 				}
+				fmt.Println("TUT ", infoObj)
 				infoOrdersCh <- infoObj
 
 			}
@@ -84,23 +86,95 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 	ordersFromDBCh chan *models.Order) {
 
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		var (
+			tickerCheckProgress = time.NewTicker(5 * time.Second)
+			tickerUpdateOrders  = time.NewTicker(2 * time.Second)
+
+			listInvalidOrders    = []string{}
+			listRegistredOrders  = []string{}
+			listProcessingOrders = []string{}
+			// listProcessedOrders  = []string{}
+		)
 		for {
 			select {
 			case <-ctx.Done():
 				logger.Log.Info("ЗАКРЫТА - Задача обновления(статусов и начисления) заказов в БД.")
 				return
-			case obj := <-infoOrdersCh:
-				fmt.Println(obj)
-				// TODO: Необходимо логировать
-				// Тут наверное будет обновдение пачкой в БД
-			case <-ticker.C:
 
+			// Распределяем объекты по "каробкам"
+			case obj := <-infoOrdersCh:
+
+				fmt.Println(obj)
+
+				switch obj.Status {
+
+				case Registred, NotRegistred:
+					listRegistredOrders = append(listRegistredOrders, obj.Order)
+
+				case Invaliud:
+					listInvalidOrders = append(listInvalidOrders, obj.Order)
+
+				case Processing:
+					listProcessingOrders = append(listProcessingOrders, obj.Order)
+
+				case Processed:
+					fieldValue := map[string]interface{}{"updated_at": time.Now(), "status": obj.Status, "bonuses": int64(obj.Accrual * 100)}
+
+					options := store.OptionsUpdateQuery{
+						ListFieldValue: fieldValue,
+						Filter:         []store.FilterParams{{Field: "number", Value: obj.Order}},
+					}
+					logger.Log.Debug("Обновление заказов в БД")
+					w.OrderStore.UpdateOrderPlusUserAccount(ctx, &options, obj.UserID, int64(obj.Accrual*100))
+
+				}
+
+			// Записываем обновления в БД раз в период = timePeriodUpdatedOrdersInDB
+			// обновляем updated_at и по необходимости status
+			case <-tickerUpdateOrders.C:
+
+				if listInvalidOrders != nil {
+					w.updateOrdersBatch(ctx, models.Invaliud, listInvalidOrders)
+					listInvalidOrders = nil
+				}
+				if listRegistredOrders != nil {
+					w.updateOrdersBatch(ctx, "", listRegistredOrders)
+					listRegistredOrders = nil
+				}
+				if listProcessingOrders != nil {
+					w.updateOrdersBatch(ctx, models.Processing, listProcessingOrders)
+					listProcessingOrders = nil
+				}
+				// if listProcessedOrders != nil {
+				// 	w.updateOrdersBatch(ctx, models.Processed, listProcessedOrders)
+				// 	listProcessedOrders = nil
+				// }
+
+			// раз в период = ticker проверяем пустоту каналов
+			// и даём команду на запрос новой пачки заказов из БД
+			case <-tickerCheckProgress.C:
 				if len(infoOrdersCh) == 0 && len(ordersFromDBCh) == 0 {
-					// TODO: Необходимо логировать
+					logger.Log.Debug("Очередной список заказов проверен и обновлен")
 					w.getDataDBSemaphore.Release()
 				}
 			}
+
 		}
 	}()
+}
+
+func (w *WorkerAccural) updateOrdersBatch(ctx context.Context, orderStatus models.StatusOrder, listNumberOrders []string) {
+
+	fieldValue := map[string]interface{}{"updated_at": time.Now()}
+
+	if orderStatus != "" {
+		fieldValue["status"] = orderStatus
+	}
+
+	options := store.OptionsUpdateQuery{
+		ListFieldValue: fieldValue,
+		Filter:         []store.FilterParams{{Field: "number", Operator: store.FilterIN, Value: listNumberOrders}},
+	}
+	logger.Log.Debug("Обновление заказов в БД")
+	w.OrderStore.UpdateBatch(ctx, &options)
 }

@@ -75,16 +75,16 @@ func (s *Store) ping() error {
 	return nil
 }
 
-// preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error)
+// PreparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error)
 // обрабатывает OptionsQuery
 // конструирует зпрос и параметры для БД
-func preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error) {
+func PreparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, *map[string]interface{}, error) {
 	var (
 		query = baseQuery
 		args  = map[string]interface{}{}
 	)
 
-	query, args = addWhereInQuery(query, args, options.Filter)
+	query, args = AddWhereInQuery(query, args, options.Filter)
 
 	for i, options := range options.Sorting {
 		if options.Key != "" {
@@ -109,12 +109,12 @@ func preparationQueryAndArgs(baseQuery string, options *OptionsQuery) (*string, 
 
 	query += " ;"
 
-	return formatQuery(&query, &args)
+	return FormatQuery(&query, &args)
 }
 
-// formatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error)
+// FormatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error)
 // форматирует в правильный вид зпрос и параметры для БД
-func formatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error) {
+func FormatQuery(q *string, a *map[string]interface{}) (*string, *map[string]interface{}, error) {
 
 	query, args, _ := sqlx.Named(*q, *a)
 
@@ -130,9 +130,9 @@ func formatQuery(q *string, a *map[string]interface{}) (*string, *map[string]int
 	return &query, &params, nil
 }
 
-// addWhereInQuery добавляет к SQL запросу (query) оператор WHERE с параметрами
+// AddWhereInQuery добавляет к SQL запросу (query) оператор WHERE с параметрами
 // Возвращает новый запрос и карту (ключ - значение)
-func addWhereInQuery(query string, args map[string]interface{}, filterOptions []FilterParams) (string, map[string]interface{}) {
+func AddWhereInQuery(query string, args map[string]interface{}, filterOptions []FilterParams) (string, map[string]interface{}) {
 	for i, filterParams := range filterOptions {
 
 		if filterParams.Field != "" {
@@ -158,9 +158,9 @@ func addWhereInQuery(query string, args map[string]interface{}, filterOptions []
 
 }
 
-// addSetInQuery добавляет к SQL запросу (query) оператор SET с параметрами
+// AddSetInQuery добавляет к SQL запросу (query) оператор SET с параметрами
 // Возвращает новый запрос и карту (ключ - значение)
-func addSetInQuery(query string, args map[string]interface{}, updetedFields map[string]interface{}) (string, map[string]interface{}) {
+func AddSetInQuery(query string, args map[string]interface{}, updetedFields map[string]interface{}) (string, map[string]interface{}) {
 	var i int
 	for key, value := range updetedFields {
 		fmt.Println(i, key, value)

@@ -16,6 +16,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/store/accountstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
+	"github.com/gofrs/uuid"
 )
 
 type StatusOrderAccural string
@@ -25,6 +26,7 @@ type InfoOrder struct {
 	Order   string             `json:"order"`
 	Status  StatusOrderAccural `json:"status"`
 	Accrual float64            `json:"accrual,omitempty"`
+	UserID  uuid.UUID
 }
 
 // WorkerAccural структура отвечает параллельную работу с заказами
@@ -93,7 +95,7 @@ func (w *WorkerAccural) StartEternalCycle(ctx context.Context) {
 // GetInfoOrder(numberOrder string) (*InfoOrder, error)
 // Получает информацию о заказе в Accrual сервисе
 // по номеру заказа и возвращает структуру InfoOrder
-func (w *WorkerAccural) GetInfoOrder(numberOrder string) (*InfoOrder, error) {
+func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*InfoOrder, error) {
 
 	var data InfoOrder
 
@@ -106,8 +108,9 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string) (*InfoOrder, error) {
 
 	case 204:
 		fmt.Println("Нет заказа")
-		data.Order = numberOrder
-		data.Status = NotRegistred
+		defer response.Body.Close()
+		data = InfoOrder{Order: numberOrder, Status: NotRegistred}
+
 	case 500:
 		fmt.Println("Ошибка 500")
 		err := errors.ErrorAccrualStatusCode500{}
@@ -125,7 +128,7 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string) (*InfoOrder, error) {
 		}
 
 	}
-
+	data.UserID = userID
 	return &data, nil
 }
 

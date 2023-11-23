@@ -12,6 +12,7 @@ type OrderStore struct {
 	*store.GetAllByParametersStore[*models.Order]
 	*store.GetSumByParametersStore[*models.Order]
 	*store.UpdateStore[*models.Order]
+	*UpdateOrderPlusUserAccountStore[*models.Order]
 }
 
 type OrderStorer interface {
@@ -20,6 +21,7 @@ type OrderStorer interface {
 	store.GetAllByParameterser[*models.Order]
 	store.GetSumByParameterser[*models.Order]
 	store.Updateer[*models.Order]
+	UpdateOrderPlusUserAccounter[*models.Order]
 }
 
 func New(baseStorage *store.Store) *OrderStore {
@@ -33,6 +35,7 @@ func New(baseStorage *store.Store) *OrderStore {
 	getAll := store.NewGetAllByParametersStore[*models.Order](baseStorage, baseSelectQueryFirst)
 	sumNumber := store.NewGetSumByParametersStore[*models.Order](baseStorage, sumSelectQueryFirst)
 	updateBatch := store.NewUpdateStore[*models.Order](baseStorage, updateQuery)
+	update := NewUpdateOrderPlusUserAccountStore[*models.Order](baseStorage, updateQuery)
 
-	return &OrderStore{baseStorage, insertStore, getFirst, getAll, sumNumber, updateBatch}
+	return &OrderStore{baseStorage, insertStore, getFirst, getAll, sumNumber, updateBatch, update}
 }

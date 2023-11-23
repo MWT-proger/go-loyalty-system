@@ -34,10 +34,10 @@ func (s *UpdateStore[E]) UpdateBatch(ctx context.Context, options *OptionsUpdate
 
 	logger.Log.Debug("Хранилище:" + stringTypeObj + ": Update...")
 
-	query, args := addSetInQuery(s.UpdateQuery, map[string]interface{}{}, options.ListFieldValue)
-	query, args = addWhereInQuery(query, args, options.Filter)
+	query, args := AddSetInQuery(s.UpdateQuery, map[string]interface{}{}, options.ListFieldValue)
+	query, args = AddWhereInQuery(query, args, options.Filter)
 
-	queryF, argsF, _ := formatQuery(&query, &args)
+	queryF, argsF, _ := FormatQuery(&query, &args)
 
 	*queryF += " ;"
 
