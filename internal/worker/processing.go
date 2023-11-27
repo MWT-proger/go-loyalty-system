@@ -2,12 +2,12 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
+	"go.uber.org/zap"
 )
 
 // getListOrdersForCheck служит генаратором потока данных
@@ -28,8 +28,8 @@ func (w *WorkerAccural) getListOrdersForCheck(ctx context.Context) chan *models.
 
 			default:
 				w.getDataDBSemaphore.Acquire()
-				// TODO: Необходимо логировать
-				objs, _ := w.GetOrderLimit()
+				logger.Log.Debug("Получение новой пачки заказов из БД")
+				objs, _ := w.GetOrderLimit(ctx)
 
 				for _, obj := range objs {
 					ordersFromDBCh <- obj
@@ -53,20 +53,18 @@ func (w *WorkerAccural) getAsyncInfoOrder(ctx context.Context, ordersFromDBCh ch
 
 		defer close(infoOrdersCh)
 		for {
-			// TODO: Необходимо логировать
 			select {
 			case <-ctx.Done():
 				logger.Log.Info("ЗАКРЫТА - Задача получения заказов из Accrual для проверки начисления.")
 				return
 			case obj := <-ordersFromDBCh:
+				logger.Log.Debug("Получение информации о заказе", zap.String("method", obj.Number))
 				infoObj, err := w.GetInfoOrder(obj.Number, obj.UserID)
 
 				if err != nil {
-					// TODO: Необходимо логировать ошибку
-					fmt.Println(err)
+					logger.Log.Error(err.Error())
 					continue
 				}
-				fmt.Println("TUT ", infoObj)
 				infoOrdersCh <- infoObj
 
 			}
@@ -93,7 +91,6 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 			listInvalidOrders    = []string{}
 			listRegistredOrders  = []string{}
 			listProcessingOrders = []string{}
-			// listProcessedOrders  = []string{}
 		)
 		for {
 			select {
@@ -101,10 +98,8 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 				logger.Log.Info("ЗАКРЫТА - Задача обновления(статусов и начисления) заказов в БД.")
 				return
 
-			// Распределяем объекты по "каробкам"
+			// Распределяем объекты по "коробкам"
 			case obj := <-infoOrdersCh:
-
-				fmt.Println(obj)
 
 				switch obj.Status {
 
@@ -145,17 +140,19 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 					w.updateOrdersBatch(ctx, models.Processing, listProcessingOrders)
 					listProcessingOrders = nil
 				}
-				// if listProcessedOrders != nil {
-				// 	w.updateOrdersBatch(ctx, models.Processed, listProcessedOrders)
-				// 	listProcessedOrders = nil
-				// }
 
 			// раз в период = ticker проверяем пустоту каналов
 			// и даём команду на запрос новой пачки заказов из БД
 			case <-tickerCheckProgress.C:
-				if len(infoOrdersCh) == 0 && len(ordersFromDBCh) == 0 {
+				if len(infoOrdersCh) == 0 &&
+					len(ordersFromDBCh) == 0 &&
+					listInvalidOrders == nil &&
+					listRegistredOrders == nil &&
+					listProcessingOrders == nil {
+
 					logger.Log.Debug("Очередной список заказов проверен и обновлен")
 					w.getDataDBSemaphore.Release()
+
 				}
 			}
 

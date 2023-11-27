@@ -6,13 +6,12 @@ db_migration:
 
 run_test:
 	../tools/gophermarttest \
-            -test.v -test.run=^TestGophermart$ \
-            -gophermart-binary-path=../cmd/gophermart/gophermart \
-            -gophermart-host=localhost \
-            -gophermart-port=8080 \
-            -gophermart-database-uri="user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable" \
-            -accrual-binary-path=../cmd/accrual/accrual_linux_amd64 \
-            -accrual-host=localhost \
-            -accrual-port=7777 \
-            -accrual-database-uri="user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable"
-go build -buildvcs=false -o gophermarttest
+		-test.v -test.run=^TestGophermart$ \
+		-gophermart-binary-path=../cmd/gophermart/gophermart \
+		-gophermart-host=localhost \
+		-gophermart-port=8080 \
+		-gophermart-database-uri="user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable" \
+		-accrual-binary-path=../cmd/accrual/accrual_linux_amd64 \
+		-accrual-host=localhost \
+		-accrual-port=7777 \
+		-accrual-database-uri="user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable"

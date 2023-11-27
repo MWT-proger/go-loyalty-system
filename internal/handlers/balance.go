@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
@@ -146,7 +145,7 @@ func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(newWithdrawal)
+
 	w.WriteHeader(http.StatusOK)
 }
 

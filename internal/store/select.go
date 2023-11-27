@@ -91,8 +91,6 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, opt
 	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetAllByParameters...")
 
 	query, args, err := PreparationQueryAndArgs(s.baseSelectQuery, options)
-	fmt.Println(*query)
-	fmt.Println(args)
 
 	if err != nil {
 		logger.Log.Error(err.Error())

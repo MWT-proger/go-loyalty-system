@@ -163,7 +163,6 @@ func AddWhereInQuery(query string, args map[string]interface{}, filterOptions []
 func AddSetInQuery(query string, args map[string]interface{}, updetedFields map[string]interface{}) (string, map[string]interface{}) {
 	var i int
 	for key, value := range updetedFields {
-		fmt.Println(i, key, value)
 
 		if i == 0 {
 			query += " SET "

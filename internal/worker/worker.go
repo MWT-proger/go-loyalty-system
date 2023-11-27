@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gofrs/uuid"
+	"go.uber.org/zap"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/errors"
@@ -16,7 +18,6 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/store/accountstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
-	"github.com/gofrs/uuid"
 )
 
 type StatusOrderAccural string
@@ -104,23 +105,24 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*Inf
 		return nil, err
 	}
 
+	logger.Log.Debug(
+		"Ответ сервиса Accrual ",
+		zap.String("Заказ", numberOrder),
+		zap.Int("Статус ответа", response.StatusCode),
+	)
+
 	switch response.StatusCode {
 
 	case 204:
-		fmt.Println("Нет заказа")
-		defer response.Body.Close()
 		data = InfoOrder{Order: numberOrder, Status: NotRegistred}
 
 	case 500:
-		fmt.Println("Ошибка 500")
 		err := errors.ErrorAccrualStatusCode500{}
 		return nil, &err
 	case 429:
-		fmt.Println("превышено количество запросов к сервису")
 		err := errors.ErrorAccrualStatusCode429{}
 		return nil, &err
 	case 200:
-		fmt.Println("Успех")
 		defer response.Body.Close()
 
 		if err := w.unmarshalBody(response.Body, &data); err != nil {
@@ -134,10 +136,10 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*Inf
 
 // GetOrderLimit() ([]*models.Order, error) Достает из БД
 // Заказы со статусами (New, Processing) в количестве равном Limit
-func (w *WorkerAccural) GetOrderLimit() ([]*models.Order, error) {
+func (w *WorkerAccural) GetOrderLimit(ctx context.Context) ([]*models.Order, error) {
 
 	objs, err := w.OrderStore.GetAllByParameters(
-		context.TODO(),
+		ctx,
 		&store.OptionsQuery{
 			Filter: []store.FilterParams{
 				{

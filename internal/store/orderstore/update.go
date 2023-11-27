@@ -2,15 +2,16 @@ package orderstore
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"go.uber.org/zap"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/accountstore"
-	"github.com/gofrs/uuid"
 )
 
 type UpdateOrderPlusUserAccountStore[E models.BaseModeler] struct {
@@ -52,30 +53,20 @@ func (s *UpdateOrderPlusUserAccountStore[E]) UpdateOrderPlusUserAccount(ctx cont
 
 	defer tx.Rollback()
 
-	// Старт - Блокируем ордер на обновление
-	// queryBlockOrder := "SELECT id, status FROM content.order "
-	// queryBlockOrder, argsBlockOrder := store.AddWhereInQuery(queryBlockOrder, map[string]interface{}{}, options.Filter)
-	// queryBlockOrder += " FOR UPDATE "
-
-	// queryBlockOrderF, argsBlockOrderF, _ := store.FormatQuery(&queryBlockOrder, &argsBlockOrder)
-
-	// rowOrder := tx.QueryRowContext(ctx, *queryBlockOrderF, *argsBlockOrderF)
-	// err = rowOrder.Scan(&order.ID, &order.Status)
-	// Конец - Блокируем ордер на обновление
-
 	if order.Status == models.Processed {
-		fmt.Println("У Заказа уже конечный статус")
+		logger.Log.Debug(
+			"У Заказа уже конечный статус ",
+			zap.String("Заказ", order.Number),
+		)
 		return nil
 	}
 
 	// Старт - Блокировка строк для определенного user_id
-	fmt.Println(userID)
 	row := tx.QueryRowContext(ctx, "SELECT id, current FROM content.account WHERE user_id = $1 FOR UPDATE ", userID)
 	err = row.Scan(&account.ID, &account.Current)
-	fmt.Println(account)
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error(err.Error())
 		account = *models.NewAccount()
 		account.UserID = userID
 
@@ -84,7 +75,6 @@ func (s *UpdateOrderPlusUserAccountStore[E]) UpdateOrderPlusUserAccount(ctx cont
 			return err
 		}
 	}
-	// current := account.Current.Int64
 	// Конец - Блокировка строк для определенного user_id
 
 	// Старт - Обновление заказа
