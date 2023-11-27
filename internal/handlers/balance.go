@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/request"
+	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
 type WithdrawForm struct {
@@ -145,7 +145,7 @@ func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(newWithdrawal)
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -158,8 +158,10 @@ func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	args := map[string]interface{}{"user_id": userID}
-	objs, err := h.WithdrawalStore.GetAllByParameters(context.TODO(), args)
+	filterParams := []store.FilterParams{
+		{Field: "user_id", Value: userID},
+	}
+	objs, err := h.WithdrawalStore.GetAllByParameters(context.TODO(), &store.OptionsQuery{Filter: filterParams})
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)

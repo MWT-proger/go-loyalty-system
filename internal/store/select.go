@@ -40,7 +40,7 @@ func (s *GetFirstByParametersStore[E]) GetFirstByParameters(ctx context.Context,
 		values = append(values, params)
 	}
 
-	query := s.baseSelectQuery + strings.Join(values, " AND ") + ` LIMIT 1 ;`
+	query := s.baseSelectQuery + "WHERE " + strings.Join(values, " AND ") + ` LIMIT 1 ;`
 	logger.Log.Debug(query)
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 
@@ -72,7 +72,7 @@ type GetAllByParametersStore[E models.BaseModeler] struct {
 }
 
 type GetAllByParameterser[E models.BaseModeler] interface {
-	GetAllByParameters(ctx context.Context, args map[string]interface{}) ([]E, error)
+	GetAllByParameters(ctx context.Context, options *OptionsQuery) ([]E, error)
 }
 
 func NewGetAllByParametersStore[E models.BaseModeler](baseStorage *Store, baseSelectQuery string) *GetAllByParametersStore[E] {
@@ -81,23 +81,25 @@ func NewGetAllByParametersStore[E models.BaseModeler](baseStorage *Store, baseSe
 
 // GetAllByParameters(ctx context.Context, args map[string]interface{}) (*E, error) общий метод
 // возвращает из хранилища все строки удовлетворяющее параметрам
-func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, args map[string]interface{}) ([]E, error) {
-	var obj E
-	stringTypeObj := reflect.TypeOf(obj).String()
-	list := []E{}
+func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, options *OptionsQuery) ([]E, error) {
+	var (
+		obj           E
+		stringTypeObj = reflect.TypeOf(obj).String()
+		list          = []E{}
+	)
 
 	logger.Log.Debug("Хранилище: " + stringTypeObj + ": GetAllByParameters...")
-	var values []string
 
-	for n := range args {
-		params := fmt.Sprintf("%s=:%s", n, n)
+	query, args, err := PreparationQueryAndArgs(s.baseSelectQuery, options)
 
-		values = append(values, params)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return nil, err
 	}
 
-	query := s.baseSelectQuery + strings.Join(values, " AND ") + ` ;`
-	logger.Log.Debug(query)
-	stmt, err := s.db.PrepareNamedContext(ctx, query)
+	logger.Log.Debug(*query)
+
+	stmt, err := s.db.PrepareNamedContext(ctx, *query)
 
 	if err != nil {
 		logger.Log.Error(err.Error())
@@ -106,7 +108,7 @@ func (s *GetAllByParametersStore[E]) GetAllByParameters(ctx context.Context, arg
 
 	defer stmt.Close()
 
-	if err := stmt.SelectContext(ctx, &list, args); err != nil {
+	if err := stmt.SelectContext(ctx, &list, *args); err != nil {
 		logger.Log.Error(err.Error())
 		return nil, err
 	}

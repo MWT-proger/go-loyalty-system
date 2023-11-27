@@ -22,7 +22,7 @@ type WithdrawalStorer interface {
 
 func New(baseStorage *store.Store) *WithdrawalStore {
 	insertQuery := "INSERT INTO content.withdrawal (id, number, bonuses, user_id, updated_at, created_at) VALUES($1,$2,$3,$4,$5,$6)"
-	baseSelectQueryFirst := "SELECT * FROM content.withdrawal WHERE "
+	baseSelectQueryFirst := "SELECT * FROM content.withdrawal "
 	sumSelectQueryFirst := "SELECT sum(bonuses) FROM content.withdrawal WHERE "
 
 	insertStore := NewInsertStore(baseStorage, insertQuery)

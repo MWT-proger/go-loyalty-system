@@ -32,7 +32,7 @@ POSTGRES_PORT=5432
 4. Запустите БД Postgres следующей командой
 
 ```bash
-  docker compose -f deployments/docker-compose.yaml --env-file deployments/.env up
+  docker compose -f deployments/docker-compose.yaml --env-file deployments/.env up -d
 ```
 5. Запустите систему расчёта вознаграждений «Гофермарт»
 ```

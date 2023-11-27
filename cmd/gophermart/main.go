@@ -13,6 +13,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/userstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
+	"github.com/MWT-proger/go-loyalty-system/internal/worker"
 )
 
 var storage store.Store
@@ -60,6 +61,18 @@ func run(ctx context.Context) error {
 	withdrawalstore := withdrawalstore.New(&storage)
 	accountstore := accountstore.New(&storage)
 	h, err := handlers.NewAPIHandler(userStore, orderstore, withdrawalstore, accountstore)
+
+	if err != nil {
+		return err
+	}
+
+	w, err := worker.NewWorkerAccural(orderstore, withdrawalstore, accountstore)
+
+	if err != nil {
+		return err
+	}
+
+	err = w.Init(ctx)
 
 	if err != nil {
 		return err

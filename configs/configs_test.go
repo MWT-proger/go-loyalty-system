@@ -19,6 +19,21 @@ func TestGetConfig(t *testing.T) {
 			DatabaseDSN:          "",
 			Auth:                 AuthConfig{SecretKey: "supersecretkey"},
 			AccuralSystemAddress: "localhost:7000",
+			Cors: CorsConfig{
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+				AllowedHeaders: []string{
+					"Authorization",
+					"Content-Type",
+					"Accept",
+					"Origin",
+					"Access-Control-Request-Method",
+					"Access-Control-Request-Headers",
+					"X-CSRF-Token",
+				},
+				AllowCredentials: true,
+				Debug:            true,
+			},
 		}},
 		{name: "Тест 2", want: Config{
 			HostServer:           ":7777",
@@ -26,6 +41,21 @@ func TestGetConfig(t *testing.T) {
 			DatabaseDSN:          "",
 			Auth:                 AuthConfig{SecretKey: "supersecretkey"},
 			AccuralSystemAddress: "localhost:6000",
+			Cors: CorsConfig{
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+				AllowedHeaders: []string{
+					"Authorization",
+					"Content-Type",
+					"Accept",
+					"Origin",
+					"Access-Control-Request-Method",
+					"Access-Control-Request-Headers",
+					"X-CSRF-Token",
+				},
+				AllowCredentials: true,
+				Debug:            true,
+			},
 		}},
 	}
 	for _, tt := range tests {
@@ -50,6 +80,21 @@ func TestInitConfig(t *testing.T) {
 			DatabaseDSN:          "",
 			Auth:                 AuthConfig{SecretKey: "supersecretkey"},
 			AccuralSystemAddress: "localhost:7000",
+			Cors: CorsConfig{
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+				AllowedHeaders: []string{
+					"Authorization",
+					"Content-Type",
+					"Accept",
+					"Origin",
+					"Access-Control-Request-Method",
+					"Access-Control-Request-Headers",
+					"X-CSRF-Token",
+				},
+				AllowCredentials: true,
+				Debug:            true,
+			},
 		}},
 	}
 	for _, tt := range tests {
@@ -72,6 +117,21 @@ func TestGetConfigFromEnv(t *testing.T) {
 				`localhost`, `postgres`, `postgres`, `testDB`),
 			Auth:                 AuthConfig{SecretKey: "NewSuperSecretKeyTEEEEEEEEEEST"},
 			AccuralSystemAddress: "example.ru",
+			Cors: CorsConfig{
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"POST", "OPTIONS", "GET"},
+				AllowedHeaders: []string{
+					"Authorization",
+					"Content-Type",
+					"Accept",
+					"Origin",
+					"Access-Control-Request-Method",
+					"Access-Control-Request-Headers",
+					"X-CSRF-Token",
+				},
+				AllowCredentials: true,
+				Debug:            true,
+			},
 		}},
 	}
 	for _, tt := range tests {
