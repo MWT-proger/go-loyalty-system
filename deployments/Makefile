@@ -15,3 +15,6 @@ run_test:
 		-accrual-host=localhost \
 		-accrual-port=7777 \
 		-accrual-database-uri="user=postgres password=postgres host=localhost port=5432 dbname=testDB sslmode=disable"
+
+run_local_test:
+	go  test ../cmd/gophermart/../../...
