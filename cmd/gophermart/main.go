@@ -29,37 +29,28 @@ func main() {
 	}
 }
 
-// initProject() иницилизирует все необходимые переменный проекта
-func initProject(ctx context.Context) error {
-	var configInit = configs.InitConfig()
-	storage = store.Store{}
-
-	parseFlags(configInit)
-
-	conf := configs.SetConfigFromEnv()
-
-	if err := logger.Initialize(conf.LogLevel); err != nil {
-		return err
-	}
-
-	if err := storage.Init(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // run() выполняет все предворительные действия и вызывает функцию запуска сервера
 func run(ctx context.Context) error {
-	err := initProject(ctx)
+
+	var configInit = configs.InitConfig()
+
+	if err := logger.Initialize(configInit.LogLevel); err != nil {
+		return err
+	}
+
+	storage, err := store.NewStore(ctx)
 
 	if err != nil {
 		return err
 	}
-	userStore := userstore.New(&storage)
-	orderstore := orderstore.New(&storage)
-	withdrawalstore := withdrawalstore.New(&storage)
-	accountstore := accountstore.New(&storage)
+
+	userStore := userstore.New(storage)
+	orderstore := orderstore.New(storage)
+	withdrawalstore := withdrawalstore.New(storage)
+	accountstore := accountstore.New(storage)
+
+	// ТУТ БУДУТ СЕРВИСЫ NEW, а уже их прокидывать будем в handlers
+
 	h, err := handlers.NewAPIHandler(userStore, orderstore, withdrawalstore, accountstore)
 
 	if err != nil {

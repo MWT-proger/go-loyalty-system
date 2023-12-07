@@ -1,6 +1,9 @@
 package configs
 
-import "os"
+import (
+	"flag"
+	"os"
+)
 
 type AuthConfig struct {
 	SecretKey string
@@ -26,7 +29,7 @@ var newConfig Config
 
 // InitConfig() Присваивает локальной не импортируемой переменной newConfig базовые значения
 // Вызывается один раз при старте проекта
-func InitConfig() *Config {
+func InitDefaultConfig() {
 	newConfig = Config{
 		HostServer:           ":8000",
 		LogLevel:             "info",
@@ -49,6 +52,15 @@ func InitConfig() *Config {
 			Debug:            true,
 		},
 	}
+
+}
+
+// InitConfig() Присваивает локальной не импортируемой переменной newConfig базовые значения
+// Вызывается один раз при старте проекта
+func InitConfig() *Config {
+	InitDefaultConfig()
+	ParseFlags()
+	SetConfigFromEnv()
 	return &newConfig
 }
 
@@ -59,7 +71,7 @@ func GetConfig() Config {
 
 // SetConfigFromEnv() Прсваевает полям значения из ENV
 // Вызывается один раз при старте проекта
-func SetConfigFromEnv() Config {
+func SetConfigFromEnv() {
 
 	if envBaseURLShortener := os.Getenv("RUN_ADDRESS"); envBaseURLShortener != "" {
 		newConfig.HostServer = envBaseURLShortener
@@ -76,5 +88,15 @@ func SetConfigFromEnv() Config {
 	if envAccuralSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envAccuralSystemAddress != "" {
 		newConfig.AccuralSystemAddress = envAccuralSystemAddress
 	}
-	return newConfig
+}
+
+// ParseFlags обрабатывает аргументы командной строки
+// и сохраняет их значения в соответствующих переменных
+func ParseFlags() {
+
+	flag.StringVar(&newConfig.HostServer, "a", newConfig.HostServer, "адрес и порт для запуска сервера")
+	flag.StringVar(&newConfig.DatabaseDSN, "d", newConfig.DatabaseDSN, "строка с адресом подключения к БД")
+	flag.StringVar(&newConfig.LogLevel, "l", "info", "уровень логирования")
+	flag.StringVar(&newConfig.AccuralSystemAddress, "r", newConfig.AccuralSystemAddress, "адрес сервера системы начисления")
+	flag.Parse()
 }

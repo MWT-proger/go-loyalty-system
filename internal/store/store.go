@@ -14,6 +14,15 @@ type Store struct {
 	db *sqlx.DB
 }
 
+func NewStore(ctx context.Context) (*Store, error) {
+	var storage = Store{}
+
+	if err := storage.Init(ctx); err != nil {
+		return nil, err
+	}
+	return &storage, nil
+}
+
 // Init(ctx context.Context) error - вызывается при запуске программы,
 // инициализирует соединение
 // и возвращает ошибку в случае не удачи
