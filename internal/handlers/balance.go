@@ -38,7 +38,7 @@ func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	obj, err := h.AccountService.GetOrSet(ctx, userID)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Requ
 	err := h.WithdrawalService.Set(ctx, userID, data.Order, data.Sum)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.R
 	objs, err := h.WithdrawalService.GetList(ctx, userID)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 

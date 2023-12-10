@@ -28,7 +28,7 @@ func NewServicesError(text string, httpCode int) *ServicesError {
 
 type ServicesError struct {
 	s        string
-	HttpCode int
+	HTTPCode int
 }
 
 func (e *ServicesError) Error() string {

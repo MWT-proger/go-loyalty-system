@@ -35,7 +35,7 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := h.UserService.UserRegister(ctx, data.Login, data.Password)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 
@@ -58,7 +58,7 @@ func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := h.UserService.UserLogin(ctx, data.Login, data.Password)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 

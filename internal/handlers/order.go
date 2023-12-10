@@ -55,7 +55,7 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 	err = h.OrderService.Set(ctx, userID, data.Number)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 	objs, err := h.OrderService.GetList(ctx, userID)
 
 	if err != nil {
-		h.setHttpError(w, err)
+		h.setHTTPError(w, err)
 		return
 	}
 

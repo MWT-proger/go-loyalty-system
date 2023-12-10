@@ -68,16 +68,13 @@ func (h *APIHandler) getBodyData(w http.ResponseWriter, r *http.Request, data Ba
 
 }
 
-// setHttpError(w http.ResponseWriter, err error) присваивает response статус ответа
+// setHTTPError(w http.ResponseWriter, err error) присваивает response статус ответа
 // вынесен для исключения дублирования в коде
-func (h *APIHandler) setHttpError(w http.ResponseWriter, err error) {
+func (h *APIHandler) setHTTPError(w http.ResponseWriter, err error) {
 	var serviceError *lErrors.ServicesError
 	if errors.As(err, &serviceError) {
-
-		http.Error(w, serviceError.Error(), serviceError.HttpCode)
-		return
+		http.Error(w, serviceError.Error(), serviceError.HTTPCode)
+	} else {
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
 	}
-
-	http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
-	return
 }
