@@ -1,0 +1,81 @@
+package services
+
+import (
+	"context"
+
+	"github.com/MWT-proger/go-loyalty-system/internal/auth"
+	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
+	"github.com/MWT-proger/go-loyalty-system/internal/models"
+)
+
+type UserStorer interface {
+	Insert(ctx context.Context, obj *models.User) error
+	GetFirstByParameters(ctx context.Context, args map[string]interface{}) (*models.User, error)
+}
+
+type UserService struct {
+	userStore UserStorer
+}
+
+func NewUserService(s UserStorer) *UserService {
+
+	return &UserService{
+		userStore: s,
+	}
+}
+
+func (s *UserService) UserLogin(ctx context.Context, login string, password string) (string, error) {
+
+	args := map[string]interface{}{"login": login}
+
+	user, err := s.userStore.GetFirstByParameters(ctx, args)
+
+	if err != nil {
+		return "", lErrors.GetUserServicesError
+	}
+
+	if user == nil {
+		return "", lErrors.UserNotFoundServicesError
+	}
+
+	if ok := auth.CheckPasswordHash(password, user.Password); !ok {
+		return "", lErrors.UserNotFoundServicesError
+	}
+
+	tokenString, err := auth.BuildJWTString(user.ID)
+
+	return tokenString, err
+}
+
+func (s *UserService) UserRegister(ctx context.Context, login string, password string) (string, error) {
+
+	newUser := models.NewUser()
+	newUser.Login = login
+
+	args := map[string]interface{}{"login": newUser.Login}
+	obj, err := s.userStore.GetFirstByParameters(ctx, args)
+
+	if err != nil {
+		return "", lErrors.GetUserServicesError
+	}
+
+	if obj != nil {
+		return "", lErrors.UserExistsServicesError
+	}
+
+	newUser.Password, err = auth.HashPassword(password)
+
+	if err != nil {
+		return "", lErrors.InternalServicesError
+	}
+
+	err = s.userStore.Insert(ctx, newUser)
+
+	if err != nil {
+		return "", lErrors.InternalServicesError
+	}
+
+	tokenString, err := auth.BuildJWTString(newUser.ID)
+
+	return tokenString, err
+}

@@ -2,62 +2,57 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
-	"github.com/MWT-proger/go-loyalty-system/internal/models"
+	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 )
 
-type UserFormAuth struct {
+type UserServicer interface {
+	UserLogin(ctx context.Context, login string, password string) (string, error)
+	UserRegister(ctx context.Context, login string, password string) (string, error)
+}
+
+type UserFormRegister struct {
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-func (d *UserFormAuth) IsValid() bool {
+func (d *UserFormRegister) IsValid() bool {
+	return auth.ValidatePassword(d.Password)
+}
+
+type UserFormLogin struct {
+	Login    string `json:"login,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+func (d *UserFormLogin) IsValid() bool {
 	return auth.ValidatePassword(d.Password)
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
-	var data UserFormAuth
+	var (
+		data UserFormRegister
+		ctx  = r.Context()
+	)
 
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
 	}
 
-	newUser := models.NewUser()
-	newUser.Login = data.Login
-
-	args := map[string]interface{}{"login": newUser.Login}
-	obj, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+	tokenString, err := h.UserService.UserRegister(ctx, data.Login, data.Password)
 
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+		var serviceError *lErrors.ServicesError
+		if errors.As(err, &serviceError) {
 
-	if obj != nil {
-		http.Error(w, "", http.StatusConflict)
-		return
-	}
+			http.Error(w, serviceError.Error(), serviceError.HttpCode)
+			return
+		}
 
-	newUser.Password, err = auth.HashPassword(data.Password)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	err = h.UserStore.Insert(context.TODO(), newUser)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	tokenString, err := auth.BuildJWTString(newUser.ID)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
 		return
 	}
 
@@ -69,34 +64,26 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
-	var data UserFormAuth
+	var (
+		data UserFormLogin
+		ctx  = r.Context()
+	)
 
 	if ok := h.getBodyData(w, r, &data); !ok {
 		return
 	}
-
-	args := map[string]interface{}{"login": data.Login}
-	user, err := h.UserStore.GetFirstByParameters(context.TODO(), args)
+	tokenString, err := h.UserService.UserLogin(ctx, data.Login, data.Password)
 
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
 
-	if user == nil {
-		http.Error(w, "", http.StatusUnauthorized)
-		return
-	}
+		var serviceError *lErrors.ServicesError
+		if errors.As(err, &serviceError) {
 
-	if ok := auth.CheckPasswordHash(data.Password, user.Password); !ok {
-		http.Error(w, "", http.StatusUnauthorized)
-		return
-	}
+			http.Error(w, serviceError.Error(), serviceError.HttpCode)
+			return
+		}
 
-	tokenString, err := auth.BuildJWTString(user.ID)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
 		return
 	}
 

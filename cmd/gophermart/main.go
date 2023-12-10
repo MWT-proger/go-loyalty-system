@@ -8,6 +8,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/router"
 	"github.com/MWT-proger/go-loyalty-system/internal/server"
+	"github.com/MWT-proger/go-loyalty-system/internal/services"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/accountstore"
 	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
@@ -51,7 +52,9 @@ func run(ctx context.Context) error {
 
 	// ТУТ БУДУТ СЕРВИСЫ NEW, а уже их прокидывать будем в handlers
 
-	h, err := handlers.NewAPIHandler(userStore, orderstore, withdrawalstore, accountstore)
+	userService := services.NewUserService(userStore)
+
+	h, err := handlers.NewAPIHandler(orderstore, withdrawalstore, accountstore, userService)
 
 	if err != nil {
 		return err
