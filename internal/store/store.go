@@ -14,10 +14,10 @@ type Store struct {
 	db *sqlx.DB
 }
 
-func NewStore(ctx context.Context) (*Store, error) {
+func NewStore(ctx context.Context, conf *configs.Config) (*Store, error) {
 	var storage = Store{}
 
-	if err := storage.Init(ctx); err != nil {
+	if err := storage.Init(ctx, conf); err != nil {
 		return nil, err
 	}
 	return &storage, nil
@@ -26,13 +26,10 @@ func NewStore(ctx context.Context) (*Store, error) {
 // Init(ctx context.Context) error - вызывается при запуске программы,
 // инициализирует соединение
 // и возвращает ошибку в случае не удачи
-func (s *Store) Init(ctx context.Context) error {
+func (s *Store) Init(ctx context.Context, conf *configs.Config) error {
 	logger.Log.Info("Хранилище: Подключение...")
 
-	var (
-		conf    = configs.GetConfig()
-		db, err = sqlx.Open("pgx", conf.DatabaseDSN)
-	)
+	var db, err = sqlx.Open("pgx", conf.DatabaseDSN)
 
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
 	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
@@ -14,12 +15,14 @@ type UserStorer interface {
 }
 
 type UserService struct {
+	conf      *configs.Config
 	userStore UserStorer
 }
 
-func NewUserService(s UserStorer) *UserService {
+func NewUserService(s UserStorer, config *configs.Config) *UserService {
 
 	return &UserService{
+		conf:      config,
 		userStore: s,
 	}
 }
@@ -45,7 +48,7 @@ func (s *UserService) UserLogin(ctx context.Context, login string, password stri
 		return "", lErrors.UserNotFoundServicesError
 	}
 
-	tokenString, err := auth.BuildJWTString(user.ID)
+	tokenString, err := auth.BuildJWTString(user.ID, s.conf)
 
 	return tokenString, err
 }
@@ -81,7 +84,7 @@ func (s *UserService) UserRegister(ctx context.Context, login string, password s
 		return "", lErrors.InternalServicesError
 	}
 
-	tokenString, err := auth.BuildJWTString(newUser.ID)
+	tokenString, err := auth.BuildJWTString(newUser.ID, s.conf)
 
 	return tokenString, err
 }

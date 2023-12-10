@@ -65,8 +65,7 @@ func ValidatePassword(password string) bool {
 // BuildJWTString(UserID uuid.UUID) (string, error) принимает UserID
 // создаёт токен для пользователя
 // и в случае успеха возвращает его в виде строки
-func BuildJWTString(UserID uuid.UUID) (string, error) {
-	conf := configs.GetConfig()
+func BuildJWTString(UserID uuid.UUID, conf *configs.Config) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{},
@@ -93,10 +92,9 @@ func SetAuthTokenToCookie(w http.ResponseWriter, token string) {
 
 // GetUserID(tokenString string) (uuid.UUID, error) Проверяет токен
 // и в случае успеха возвращает из полезной нагрузки UserID
-func GetUserID(tokenString string) uuid.UUID {
+func GetUserID(tokenString string, conf *configs.Config) uuid.UUID {
 
 	claims := &Claims{}
-	conf := configs.GetConfig()
 
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {

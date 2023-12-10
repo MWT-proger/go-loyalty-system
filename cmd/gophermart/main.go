@@ -6,7 +6,6 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/handlers"
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
-	"github.com/MWT-proger/go-loyalty-system/internal/router"
 	"github.com/MWT-proger/go-loyalty-system/internal/server"
 	"github.com/MWT-proger/go-loyalty-system/internal/services"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
@@ -33,13 +32,13 @@ func main() {
 // run() выполняет все предворительные действия и вызывает функцию запуска сервера
 func run(ctx context.Context) error {
 
-	var configInit = configs.InitConfig()
+	var conf = configs.InitConfig()
 
-	if err := logger.Initialize(configInit.LogLevel); err != nil {
+	if err := logger.Initialize(conf.LogLevel); err != nil {
 		return err
 	}
 
-	storage, err := store.NewStore(ctx)
+	storage, err := store.NewStore(ctx, conf)
 
 	if err != nil {
 		return err
@@ -50,7 +49,7 @@ func run(ctx context.Context) error {
 	withdrawalStore := withdrawalstore.New(storage)
 	accountStore := accountstore.New(storage)
 
-	userService := services.NewUserService(userStore)
+	userService := services.NewUserService(userStore, conf)
 	orderService := services.NewOrderService(orderStore)
 	accountService := services.NewAccountService(accountStore)
 	withdrawalService := services.NewWithdrawalService(withdrawalStore)
@@ -61,7 +60,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	w, err := worker.NewWorkerAccural(orderStore, withdrawalStore, accountStore)
+	w, err := worker.NewWorkerAccural(conf, orderStore, withdrawalStore, accountStore)
 
 	if err != nil {
 		return err
@@ -73,9 +72,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	r := router.Router(h)
-
-	err = server.Run(r)
+	err = server.Run(h, conf)
 
 	if err != nil {
 		return err

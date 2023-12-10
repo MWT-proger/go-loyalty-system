@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/gofrs/uuid"
 )
 
@@ -10,7 +11,7 @@ import (
 // Проверяет у пользователя подписанную куку, содержащую уникальный идентификатор пользователя,
 // и записывает ID пользователя в контекст
 // если такой куки не существует или она не проходит проверку подлинности возвращает статус Unauthorized.
-func AuthCookieMiddleware(next http.Handler) http.Handler {
+func AuthCookieMiddleware(next http.Handler, conf *configs.Config) http.Handler {
 	// получаем Handler приведением типа http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -27,7 +28,7 @@ func AuthCookieMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenString = token.Value
-		UserID = GetUserID(tokenString)
+		UserID = GetUserID(tokenString, conf)
 
 		if UserID == uuid.Nil {
 			http.Error(w, "", http.StatusUnauthorized)

@@ -1,6 +1,8 @@
-package router
+package server
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 
@@ -11,9 +13,8 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 )
 
-// Router() Перенаправляет запросы на необходимые хендлеры
-func Router(h *handlers.APIHandler) *chi.Mux {
-	conf := configs.GetConfig()
+// router() Перенаправляет запросы на необходимые хендлеры
+func router(h *handlers.APIHandler, conf *configs.Config) *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Use(logger.RequestLogger)
@@ -30,8 +31,9 @@ func Router(h *handlers.APIHandler) *chi.Mux {
 	r.Post("/api/user/login", h.UserLogin)
 
 	r.Group(func(r chi.Router) {
-
-		r.Use(auth.AuthCookieMiddleware)
+		r.Use(func(next http.Handler) http.Handler {
+			return auth.AuthCookieMiddleware(next, conf)
+		})
 		r.Post("/api/user/orders", h.SetUserOrder)
 		r.Get("/api/user/orders", h.GetListOrdersUser)
 		r.Get("/api/user/balance", h.GetUserBalance)

@@ -53,12 +53,11 @@ const (
 )
 
 func NewWorkerAccural(
+	conf *configs.Config,
 	orderstore orderstore.OrderStorer,
 	withdrawalstore withdrawalstore.WithdrawalStorer,
 	accountstore accountstore.AccountStorer,
 ) (w *WorkerAccural, err error) {
-
-	conf := configs.GetConfig()
 
 	ww := &WorkerAccural{
 		OrderStore:      orderstore,

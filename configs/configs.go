@@ -65,11 +65,6 @@ func InitConfig() *Config {
 	return &newConfig
 }
 
-// GetConfig() выводит не импортируемую переменную newConfig.
-func GetConfig() Config {
-	return newConfig
-}
-
 // setConfigFromEnv() Прсваевает полям  глобальной переменной newConfig значения из ENV.
 // Вызывается один раз при старте проекта.
 func setConfigFromEnv() {
