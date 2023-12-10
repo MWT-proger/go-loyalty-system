@@ -3,8 +3,11 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+
+	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 )
 
 // unmarshalBody(body io.ReadCloser, form interface{}) error
@@ -56,11 +59,25 @@ func (h *APIHandler) getBodyData(w http.ResponseWriter, r *http.Request, data Ba
 		return false
 	}
 
-	if ok := data.IsValid(); !ok {
+	if ok := data.isValid(); !ok {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return false
 	}
 
 	return true
 
+}
+
+// setHttpError(w http.ResponseWriter, err error) присваивает response статус ответа
+// вынесен для исключения дублирования в коде
+func (h *APIHandler) setHttpError(w http.ResponseWriter, err error) {
+	var serviceError *lErrors.ServicesError
+	if errors.As(err, &serviceError) {
+
+		http.Error(w, serviceError.Error(), serviceError.HttpCode)
+		return
+	}
+
+	http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+	return
 }

@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
-	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 )
 
 type UserServicer interface {
@@ -14,27 +12,19 @@ type UserServicer interface {
 	UserRegister(ctx context.Context, login string, password string) (string, error)
 }
 
-type UserFormRegister struct {
+type userFormRegister struct {
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-func (d *UserFormRegister) IsValid() bool {
-	return auth.ValidatePassword(d.Password)
-}
-
-type UserFormLogin struct {
+type userFormLogin struct {
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
-}
-
-func (d *UserFormLogin) IsValid() bool {
-	return auth.ValidatePassword(d.Password)
 }
 
 func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	var (
-		data UserFormRegister
+		data userFormRegister
 		ctx  = r.Context()
 	)
 
@@ -45,14 +35,7 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := h.UserService.UserRegister(ctx, data.Login, data.Password)
 
 	if err != nil {
-		var serviceError *lErrors.ServicesError
-		if errors.As(err, &serviceError) {
-
-			http.Error(w, serviceError.Error(), serviceError.HttpCode)
-			return
-		}
-
-		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+		h.setHttpError(w, err)
 		return
 	}
 
@@ -65,7 +48,7 @@ func (h *APIHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		data UserFormLogin
+		data userFormLogin
 		ctx  = r.Context()
 	)
 
@@ -75,15 +58,7 @@ func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := h.UserService.UserLogin(ctx, data.Login, data.Password)
 
 	if err != nil {
-
-		var serviceError *lErrors.ServicesError
-		if errors.As(err, &serviceError) {
-
-			http.Error(w, serviceError.Error(), serviceError.HttpCode)
-			return
-		}
-
-		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+		h.setHttpError(w, err)
 		return
 	}
 
@@ -91,4 +66,12 @@ func (h *APIHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
+}
+
+func (d *userFormRegister) isValid() bool {
+	return auth.ValidatePassword(d.Password)
+}
+
+func (d *userFormLogin) isValid() bool {
+	return auth.ValidatePassword(d.Password)
 }

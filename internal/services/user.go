@@ -24,6 +24,9 @@ func NewUserService(s UserStorer) *UserService {
 	}
 }
 
+// UserLogin(ctx context.Context, login string, password string) проверяет данные пользователя
+// при совпадение, формирует токен авторизации и возвращает пользователю
+// TODO: МБ и правда генерацию токена оставить в хендлере(для возможности выбора способа авторизации)
 func (s *UserService) UserLogin(ctx context.Context, login string, password string) (string, error) {
 
 	args := map[string]interface{}{"login": login}
@@ -47,6 +50,9 @@ func (s *UserService) UserLogin(ctx context.Context, login string, password stri
 	return tokenString, err
 }
 
+// UserRegister(ctx context.Context, login string, password string) создает пользователя
+// при успехе, формирует токен авторизации и возвращает пользователю
+// TODO: МБ и правда генерацию токена оставить в хендлере(для возможности выбора способа авторизации)
 func (s *UserService) UserRegister(ctx context.Context, login string, password string) (string, error) {
 
 	newUser := models.NewUser()

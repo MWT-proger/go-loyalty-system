@@ -27,6 +27,8 @@ func NewOrderService(s OrderStorer) *OrderService {
 	}
 }
 
+// Set(ctx context.Context, userID uuid.UUID, numberOrder string) создает новый заказ
+// с numberOrder для пользователя с userID
 func (s *OrderService) Set(ctx context.Context, userID uuid.UUID, numberOrder string) error {
 
 	args := map[string]interface{}{"number": numberOrder}
@@ -54,6 +56,7 @@ func (s *OrderService) Set(ctx context.Context, userID uuid.UUID, numberOrder st
 	return err
 }
 
+// GetList(ctx context.Context, userID uuid.UUID) Возвращает список заказов пользователя
 func (s *OrderService) GetList(ctx context.Context, userID uuid.UUID) ([]*models.Order, error) {
 
 	filterParams := []store.FilterParams{

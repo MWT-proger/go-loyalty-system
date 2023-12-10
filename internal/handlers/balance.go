@@ -2,26 +2,126 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
-	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
-type WithdrawForm struct {
+type AccountServicer interface {
+	GetOrSet(ctx context.Context, userID uuid.UUID) (*models.Account, error)
+}
+type WithdrawalServicer interface {
+	GetList(ctx context.Context, userID uuid.UUID) ([]*models.Withdrawal, error)
+	Set(ctx context.Context, userID uuid.UUID, numberOrder string, sum int64) error
+}
+
+type withdrawForm struct {
 	Order string `json:"order"`
 	Sum   int64  `json:"-"`
 }
 
-func (d *WithdrawForm) UnmarshalJSON(data []byte) error {
+func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
+	var (
+		ctx        = r.Context()
+		userID, ok = auth.UserIDFrom(ctx)
+	)
 
-	type alias WithdrawForm
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	obj, err := h.AccountService.GetOrSet(ctx, userID)
+
+	if err != nil {
+		h.setHttpError(w, err)
+		return
+	}
+
+	resp, err := json.Marshal(obj)
+
+	if err != nil {
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+
+}
+
+func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Request) {
+	var (
+		ctx        = r.Context()
+		data       withdrawForm
+		userID, ok = auth.UserIDFrom(r.Context())
+	)
+
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+
+	if err := h.unmarshalBody(r.Body, &data); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	if ok := data.isValid(); !ok {
+		http.Error(w, "", http.StatusUnprocessableEntity)
+		return
+	}
+	err := h.WithdrawalService.Set(ctx, userID, data.Order, data.Sum)
+
+	if err != nil {
+		h.setHttpError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		ctx        = r.Context()
+		userID, ok = auth.UserIDFrom(r.Context())
+	)
+
+	if !ok {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	objs, err := h.WithdrawalService.GetList(ctx, userID)
+
+	if err != nil {
+		h.setHttpError(w, err)
+		return
+	}
+
+	resp, err := json.Marshal(objs)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
+// UnmarshalJSON(data []byte) подгатавливает данные для вывода на клиент,
+// поэтому этот метод публичный
+func (d *withdrawForm) UnmarshalJSON(data []byte) error {
+
+	type alias withdrawForm
 
 	aliasValue := &struct {
 		*alias
@@ -40,146 +140,7 @@ func (d *WithdrawForm) UnmarshalJSON(data []byte) error {
 
 }
 
-func (d *WithdrawForm) IsValid() bool {
+func (d *withdrawForm) isValid() bool {
 	return luhn.Validate(d.Order)
 
-}
-
-func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
-
-	userID, ok := auth.UserIDFrom(r.Context())
-
-	if !ok {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	args := map[string]interface{}{"user_id": userID}
-
-	obj, err := h.AccountStore.GetFirstByParameters(context.TODO(), args)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	if obj == nil {
-
-		obj = models.NewAccount()
-		obj.UserID = userID
-
-		if err := h.AccountStore.Insert(context.TODO(), obj); err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-	}
-
-	resp, err := json.Marshal(obj)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
-
-}
-
-func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Request) {
-
-	var data WithdrawForm
-	userID, ok := auth.UserIDFrom(r.Context())
-
-	if !ok {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	if err := h.unmarshalBody(r.Body, &data); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	if ok := data.IsValid(); !ok {
-		http.Error(w, "", http.StatusUnprocessableEntity)
-		return
-	}
-	args := map[string]interface{}{"number": data.Order}
-	obj, err := h.WithdrawalStore.GetFirstByParameters(context.TODO(), args)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	if obj != nil {
-
-		if obj.UserID != userID || obj.Bonuses.Int64 != data.Sum {
-			http.Error(w, "", http.StatusConflict)
-			return
-		}
-
-		http.Error(w, "", http.StatusOK)
-		return
-
-	}
-
-	newWithdrawal := models.NewWithdrawal()
-	newWithdrawal.Number = data.Order
-	newWithdrawal.UserID = userID
-	newWithdrawal.Bonuses = sql.NullInt64{Int64: data.Sum, Valid: true}
-
-	err = h.WithdrawalStore.Insert(context.TODO(), newWithdrawal)
-
-	if err != nil {
-
-		if errors.Is(err, &lErrors.ErrorNotBonuses{}) {
-			http.Error(w, "", http.StatusPaymentRequired)
-			return
-		}
-
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.Request) {
-
-	userID, ok := auth.UserIDFrom(r.Context())
-
-	if !ok {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	filterParams := []store.FilterParams{
-		{Field: "user_id", Value: userID},
-	}
-	objs, err := h.WithdrawalStore.GetAllByParameters(context.TODO(), &store.OptionsQuery{Filter: filterParams})
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	if len(objs) == 0 {
-		http.Error(w, "", http.StatusNoContent)
-		return
-	}
-
-	resp, err := json.Marshal(objs)
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
 }

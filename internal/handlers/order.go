@@ -3,13 +3,11 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
-	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 )
@@ -19,24 +17,19 @@ type OrderServicer interface {
 	GetList(ctx context.Context, userID uuid.UUID) ([]*models.Order, error)
 }
 
-type OrderForm struct {
+type orderForm struct {
 	Number string
-}
-
-func (d *OrderForm) IsValid() bool {
-	if d.Number == "" {
-		return false
-	}
-	return luhn.Validate(d.Number)
 }
 
 // SetUserOrder(w http.ResponseWriter, r *http.Request)
 // Хендлер добавляет авторизованному пользователю новый заказ
 func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
-	var data OrderForm
-	var ctx = r.Context()
-	userID, ok := auth.UserIDFrom(ctx)
+	var (
+		data       orderForm
+		ctx        = r.Context()
+		userID, ok = auth.UserIDFrom(ctx)
+	)
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -54,7 +47,7 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 	data.Number = text
 
-	if ok := data.IsValid(); !ok {
+	if ok := data.isValid(); !ok {
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
@@ -62,14 +55,7 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 	err = h.OrderService.Set(ctx, userID, data.Number)
 
 	if err != nil {
-		var serviceError *lErrors.ServicesError
-		if errors.As(err, &serviceError) {
-
-			http.Error(w, serviceError.Error(), serviceError.HttpCode)
-			return
-		}
-
-		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+		h.setHttpError(w, err)
 		return
 	}
 
@@ -78,8 +64,10 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 
-	var ctx = r.Context()
-	userID, ok := auth.UserIDFrom(ctx)
+	var (
+		ctx        = r.Context()
+		userID, ok = auth.UserIDFrom(ctx)
+	)
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -89,14 +77,7 @@ func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 	objs, err := h.OrderService.GetList(ctx, userID)
 
 	if err != nil {
-		var serviceError *lErrors.ServicesError
-		if errors.As(err, &serviceError) {
-
-			http.Error(w, serviceError.Error(), serviceError.HttpCode)
-			return
-		}
-
-		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
+		h.setHttpError(w, err)
 		return
 	}
 
@@ -110,4 +91,11 @@ func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 
+}
+
+func (d *orderForm) isValid() bool {
+	if d.Number == "" {
+		return false
+	}
+	return luhn.Validate(d.Number)
 }

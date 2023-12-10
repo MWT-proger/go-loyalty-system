@@ -67,5 +67,24 @@ var OrderExistsServicesError = NewServicesError(
 
 var ListOrdersEmptyServicesError = NewServicesError(
 	"список заказов пуст",
+	http.StatusNoContent,
+)
+
+var ListWithdrawalsEmptyServicesError = NewServicesError(
+	"список списаний пуст",
+	http.StatusNoContent,
+)
+
+var WithdrawalExistsOtherUserServicesError = NewServicesError(
+	"списание уже было произведено другим пользователем",
+	http.StatusConflict,
+)
+var WithdrawalExistsServicesError = NewServicesError(
+	"данное вы уже оформили",
 	http.StatusOK,
+)
+
+var NotBonusesWithdrawalServicesError = NewServicesError(
+	"недостаточно средств для списания",
+	http.StatusPaymentRequired,
 )
