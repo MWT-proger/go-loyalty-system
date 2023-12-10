@@ -60,7 +60,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	w, err := worker.NewWorkerAccural(conf, orderStore, withdrawalStore, accountStore)
+	w, err := worker.NewWorkerAccural(conf, orderStore)
 
 	if err != nil {
 		return err

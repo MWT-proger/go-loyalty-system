@@ -159,6 +159,7 @@ func (w *WorkerAccural) updateAsyncIOrderToDB(
 	}()
 }
 
+// TODO: можно тоже вынести в сервисный слой
 func (w *WorkerAccural) updateOrdersBatch(ctx context.Context, orderStatus models.StatusOrder, listNumberOrders []string) {
 
 	fieldValue := map[string]interface{}{"updated_at": time.Now()}

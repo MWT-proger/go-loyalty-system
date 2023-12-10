@@ -14,9 +14,6 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
-	"github.com/MWT-proger/go-loyalty-system/internal/store/accountstore"
-	"github.com/MWT-proger/go-loyalty-system/internal/store/orderstore"
-	"github.com/MWT-proger/go-loyalty-system/internal/store/withdrawalstore"
 )
 
 type StatusOrderAccural string
@@ -29,13 +26,17 @@ type InfoOrder struct {
 	UserID  uuid.UUID
 }
 
+type OrderStorer interface {
+	GetAllByParameters(ctx context.Context, options *store.OptionsQuery) ([]*models.Order, error)
+	UpdateBatch(ctx context.Context, options *store.OptionsUpdateQuery) error
+	UpdateOrderPlusUserAccount(ctx context.Context, options *store.OptionsUpdateQuery, userID uuid.UUID, bonuses int64) error
+}
+
 // WorkerAccural структура отвечает параллельную работу с заказами
 // OrderStore, WithdrawalStore, AccountStore репозитории объектов в БД
 // getDataDBSemaphore семафор ограничивающий колличество запросов к БД
 type WorkerAccural struct {
-	OrderStore         orderstore.OrderStorer
-	WithdrawalStore    withdrawalstore.WithdrawalStorer
-	AccountStore       accountstore.AccountStorer
+	OrderStore         OrderStorer
 	client             *http.Client
 	baseURL            string
 	getDataDBSemaphore Semaphore
@@ -53,15 +54,11 @@ const (
 
 func NewWorkerAccural(
 	conf *configs.Config,
-	orderstore orderstore.OrderStorer,
-	withdrawalstore withdrawalstore.WithdrawalStorer,
-	accountstore accountstore.AccountStorer,
+	orderstore OrderStorer,
 ) (w *WorkerAccural, err error) {
 
 	ww := &WorkerAccural{
-		OrderStore:      orderstore,
-		WithdrawalStore: withdrawalstore,
-		AccountStore:    accountstore,
+		OrderStore: orderstore,
 		client: &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return nil
@@ -94,6 +91,7 @@ func (w *WorkerAccural) StartEternalCycle(ctx context.Context) {
 // GetInfoOrder(numberOrder string) (*InfoOrder, error)
 // Получает информацию о заказе в Accrual сервисе
 // по номеру заказа и возвращает структуру InfoOrder
+// TODO: можно вынести в пакет client
 func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*InfoOrder, error) {
 
 	var data InfoOrder
@@ -134,6 +132,7 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*Inf
 
 // GetOrderLimit() ([]*models.Order, error) Достает из БД
 // Заказы со статусами (New, Processing) в количестве равном Limit
+// TODO: можно тоже вынести в сервисный слой
 func (w *WorkerAccural) GetOrderLimit(ctx context.Context) ([]*models.Order, error) {
 
 	objs, err := w.OrderStore.GetAllByParameters(
