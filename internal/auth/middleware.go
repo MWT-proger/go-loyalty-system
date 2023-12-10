@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/MWT-proger/go-loyalty-system/internal/request"
 )
 
 // AuthCookieMiddleware(next http.Handler) http.Handler — middleware-для входящих HTTP-запросов.
@@ -36,7 +34,7 @@ func AuthCookieMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx = request.WithUserID(ctx, UserID)
+		ctx = WithUserID(ctx, UserID)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

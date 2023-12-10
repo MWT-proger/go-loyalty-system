@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/MWT-proger/go-loyalty-system/internal/auth"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/request"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
@@ -27,7 +27,7 @@ func (d *OrderForm) IsValid() bool {
 func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 	var data OrderForm
-	userID, ok := request.UserIDFrom(r.Context())
+	userID, ok := auth.UserIDFrom(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -85,7 +85,7 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := request.UserIDFrom(r.Context())
+	userID, ok := auth.UserIDFrom(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)

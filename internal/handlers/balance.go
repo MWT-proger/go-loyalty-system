@@ -7,10 +7,10 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/MWT-proger/go-loyalty-system/internal/auth"
 	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/request"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
 
@@ -47,7 +47,7 @@ func (d *WithdrawForm) IsValid() bool {
 
 func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := request.UserIDFrom(r.Context())
+	userID, ok := auth.UserIDFrom(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -91,7 +91,7 @@ func (h *APIHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	var data WithdrawForm
-	userID, ok := request.UserIDFrom(r.Context())
+	userID, ok := auth.UserIDFrom(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -151,7 +151,7 @@ func (h *APIHandler) WithdrawWithUserBalance(w http.ResponseWriter, r *http.Requ
 
 func (h *APIHandler) GetListWithdrawUserBalance(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := request.UserIDFrom(r.Context())
+	userID, ok := auth.UserIDFrom(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)

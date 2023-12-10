@@ -7,8 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/go-chi/chi"
+
+	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
