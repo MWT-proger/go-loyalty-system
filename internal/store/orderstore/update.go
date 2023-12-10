@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"go.uber.org/zap"
 
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
@@ -56,7 +55,7 @@ func (s *UpdateOrderPlusUserAccountStore[E]) UpdateOrderPlusUserAccount(ctx cont
 	if order.Status == models.Processed {
 		logger.Log.Debug(
 			"У Заказа уже конечный статус ",
-			zap.String("Заказ", order.Number),
+			logger.StringField("Заказ", order.Number),
 		)
 		return nil
 	}

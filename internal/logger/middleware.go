@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
-	"go.uber.org/zap"
 )
 
 // RequestLogger — middleware-логер для входящих HTTP-запросов.
@@ -19,11 +18,11 @@ func RequestLogger(next http.Handler) http.Handler {
 		defer func() {
 
 			Log.Info("got incoming HTTP request",
-				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path),
-				zap.Int("status", ww.Status()),
-				zap.Int("length", ww.BytesWritten()),
-				zap.Duration("time", time.Since(timeStart)),
+				StringField("method", r.Method),
+				StringField("path", r.URL.Path),
+				IntField("status", ww.Status()),
+				IntField("length", ww.BytesWritten()),
+				DurationField("time", time.Since(timeStart)),
 			)
 		}()
 

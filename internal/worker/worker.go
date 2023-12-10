@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
-	"go.uber.org/zap"
 
 	"github.com/MWT-proger/go-loyalty-system/configs"
 	"github.com/MWT-proger/go-loyalty-system/internal/errors"
@@ -106,8 +105,8 @@ func (w *WorkerAccural) GetInfoOrder(numberOrder string, userID uuid.UUID) (*Inf
 
 	logger.Log.Debug(
 		"Ответ сервиса Accrual ",
-		zap.String("Заказ", numberOrder),
-		zap.Int("Статус ответа", response.StatusCode),
+		logger.StringField("Заказ", numberOrder),
+		logger.IntField("Статус ответа", response.StatusCode),
 	)
 
 	switch response.StatusCode {

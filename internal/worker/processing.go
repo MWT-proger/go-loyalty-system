@@ -7,7 +7,6 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/logger"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 	"github.com/MWT-proger/go-loyalty-system/internal/store"
-	"go.uber.org/zap"
 )
 
 // getListOrdersForCheck служит генаратором потока данных
@@ -58,7 +57,7 @@ func (w *WorkerAccural) getAsyncInfoOrder(ctx context.Context, ordersFromDBCh ch
 				logger.Log.Info("ЗАКРЫТА - Задача получения заказов из Accrual для проверки начисления.")
 				return
 			case obj := <-ordersFromDBCh:
-				logger.Log.Debug("Получение информации о заказе", zap.String("method", obj.Number))
+				logger.Log.Debug("Получение информации о заказе", logger.StringField("method", obj.Number))
 				infoObj, err := w.GetInfoOrder(obj.Number, obj.UserID)
 
 				if err != nil {
