@@ -58,7 +58,12 @@ func (s *UserService) UserLogin(ctx context.Context, login string, password stri
 // TODO: МБ и правда генерацию токена оставить в хендлере(для возможности выбора способа авторизации)
 func (s *UserService) UserRegister(ctx context.Context, login string, password string) (string, error) {
 
-	newUser := models.NewUser()
+	newUser, err := models.NewUser()
+
+	if err != nil {
+		return "", lErrors.InternalServicesError
+	}
+
 	newUser.Login = login
 
 	args := map[string]interface{}{"login": newUser.Login}

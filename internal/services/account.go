@@ -38,7 +38,12 @@ func (s *AccountService) GetOrSet(ctx context.Context, userID uuid.UUID) (*model
 
 	if obj == nil {
 
-		obj = models.NewAccount()
+		obj, err := models.NewAccount()
+
+		if err != nil {
+			return nil, lErrors.InternalServicesError
+		}
+
 		obj.UserID = userID
 
 		if err := s.AccountStore.Insert(ctx, obj); err != nil {

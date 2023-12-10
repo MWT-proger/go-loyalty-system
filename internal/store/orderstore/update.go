@@ -63,16 +63,20 @@ func (s *UpdateOrderPlusUserAccountStore[E]) UpdateOrderPlusUserAccount(ctx cont
 	// Старт - Блокировка строк для определенного user_id
 	row := tx.QueryRowContext(ctx, "SELECT id, current FROM content.account WHERE user_id = $1 FOR UPDATE ", userID)
 	err = row.Scan(&account.ID, &account.Current)
-
 	if err != nil {
 		logger.Log.Error(err.Error())
-		account = *models.NewAccount()
-		account.UserID = userID
-
-		if err := accountstore.Insert(ctx, tx.Tx, account); err != nil {
+		newAccount, err := models.NewAccount()
+		if err != nil {
 			logger.Log.Error(err.Error())
 			return err
 		}
+		newAccount.UserID = userID
+
+		if err := accountstore.Insert(ctx, tx.Tx, newAccount); err != nil {
+			logger.Log.Error(err.Error())
+			return err
+		}
+		account = *newAccount
 	}
 	// Конец - Блокировка строк для определенного user_id
 

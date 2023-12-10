@@ -8,8 +8,7 @@ import (
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
 )
 
-func Insert(ctx context.Context, tx *sql.Tx, obj models.Account) error {
-
+func Insert(ctx context.Context, tx *sql.Tx, obj *models.Account) error {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO content.account (id, user_id, updated_at, created_at) VALUES($1,$2,$3,$4)")
 
 	if err != nil {
@@ -20,7 +19,6 @@ func Insert(ctx context.Context, tx *sql.Tx, obj models.Account) error {
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, obj.GetArgsInsert()...)
-
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err

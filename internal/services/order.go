@@ -47,7 +47,11 @@ func (s *OrderService) Set(ctx context.Context, userID uuid.UUID, numberOrder st
 		return lErrors.OrderExistsServicesError
 	}
 
-	newOrder := models.NewOrder()
+	newOrder, err := models.NewOrder()
+
+	if err != nil {
+		return lErrors.InternalServicesError
+	}
 	newOrder.Number = numberOrder
 	newOrder.UserID = userID
 

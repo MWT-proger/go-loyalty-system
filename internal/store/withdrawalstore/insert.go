@@ -44,13 +44,19 @@ func (s *InsertStore) Insert(ctx context.Context, obj *models.Withdrawal) error 
 	err = row.Scan(&account.ID, &account.Current, &account.Withdrawn)
 
 	if err != nil {
-		account = *models.NewAccount()
-		account.UserID = obj.UserID
+		newAccount, err := models.NewAccount()
 
-		if err := accountstore.Insert(ctx, tx, account); err != nil {
+		if err != nil {
 			logger.Log.Error(err.Error())
 			return err
 		}
+		newAccount.UserID = obj.UserID
+
+		if err := accountstore.Insert(ctx, tx, newAccount); err != nil {
+			logger.Log.Error(err.Error())
+			return err
+		}
+		account = *newAccount
 	}
 	current := account.Current.Int64 - obj.Bonuses.Int64
 	if current < 0 {

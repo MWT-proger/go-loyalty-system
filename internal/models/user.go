@@ -22,8 +22,11 @@ func (d *User) GetArgsInsert() []any {
 	return []any{d.ID, d.Login, d.Password, d.CreatedAt}
 }
 
-func NewUser() *User {
-	newUUID, _ := uuid.NewV4()
-	p := &User{ID: newUUID, CreatedAt: time.Now()}
-	return p
+func NewUser() (*User, error) {
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+	o := &User{ID: newUUID, CreatedAt: time.Now()}
+	return o, nil
 }

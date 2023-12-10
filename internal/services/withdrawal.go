@@ -45,7 +45,12 @@ func (s *WithdrawalService) Set(ctx context.Context, userID uuid.UUID, numberOrd
 		return lErrors.WithdrawalExistsServicesError
 	}
 
-	newWithdrawal := models.NewWithdrawal()
+	newWithdrawal, err := models.NewWithdrawal()
+
+	if err != nil {
+		return lErrors.InternalServicesError
+	}
+
 	newWithdrawal.Number = numberOrder
 	newWithdrawal.UserID = userID
 	newWithdrawal.Bonuses = sql.NullInt64{Int64: sum, Valid: true}

@@ -47,12 +47,15 @@ func (d *Withdrawal) MarshalJSON() ([]byte, error) {
 
 }
 
-func NewWithdrawal() *Withdrawal {
-	newUUID, _ := uuid.NewV4()
+func NewWithdrawal() (*Withdrawal, error) {
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	o := &Withdrawal{
 		ID:        newUUID,
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
 	}
-	return o
+	return o, nil
 }

@@ -48,12 +48,15 @@ func (s *Account) MarshalJSON() ([]byte, error) {
 
 }
 
-func NewAccount() *Account {
-	newUUID, _ := uuid.NewV4()
+func NewAccount() (*Account, error) {
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	o := &Account{
 		ID:        newUUID,
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
 	}
-	return o
+	return o, nil
 }

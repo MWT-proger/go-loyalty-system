@@ -64,12 +64,15 @@ func (s *Order) MarshalJSON() ([]byte, error) {
 
 }
 
-func NewOrder() *Order {
-	newUUID, _ := uuid.NewV4()
+func NewOrder() (*Order, error) {
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	o := &Order{
 		ID:        newUUID,
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
 	}
-	return o
+	return o, nil
 }
