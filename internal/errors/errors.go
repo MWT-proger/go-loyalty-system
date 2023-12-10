@@ -54,3 +54,18 @@ var InternalServicesError = NewServicesError(
 	"внутренняя ошибка сервера",
 	http.StatusInternalServerError,
 )
+
+var OrderExistsOtherUserServicesError = NewServicesError(
+	"заказ уже загружен другим пользователем",
+	http.StatusConflict,
+)
+
+var OrderExistsServicesError = NewServicesError(
+	"заказ уже был загружен вами",
+	http.StatusOK,
+)
+
+var ListOrdersEmptyServicesError = NewServicesError(
+	"список заказов пуст",
+	http.StatusOK,
+)

@@ -46,21 +46,22 @@ func run(ctx context.Context) error {
 	}
 
 	userStore := userstore.New(storage)
-	orderstore := orderstore.New(storage)
+	orderStore := orderstore.New(storage)
 	withdrawalstore := withdrawalstore.New(storage)
 	accountstore := accountstore.New(storage)
 
 	// ТУТ БУДУТ СЕРВИСЫ NEW, а уже их прокидывать будем в handlers
 
 	userService := services.NewUserService(userStore)
+	orderService := services.NewOrderService(orderStore)
 
-	h, err := handlers.NewAPIHandler(orderstore, withdrawalstore, accountstore, userService)
+	h, err := handlers.NewAPIHandler(withdrawalstore, accountstore, userService, orderService)
 
 	if err != nil {
 		return err
 	}
 
-	w, err := worker.NewWorkerAccural(orderstore, withdrawalstore, accountstore)
+	w, err := worker.NewWorkerAccural(orderStore, withdrawalstore, accountstore)
 
 	if err != nil {
 		return err

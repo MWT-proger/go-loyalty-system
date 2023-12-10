@@ -3,13 +3,21 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/MWT-proger/go-loyalty-system/internal/auth"
+	lErrors "github.com/MWT-proger/go-loyalty-system/internal/errors"
 	"github.com/MWT-proger/go-loyalty-system/internal/luhn"
 	"github.com/MWT-proger/go-loyalty-system/internal/models"
-	"github.com/MWT-proger/go-loyalty-system/internal/store"
 )
+
+type OrderServicer interface {
+	Set(ctx context.Context, userID uuid.UUID, numberOrder string) error
+	GetList(ctx context.Context, userID uuid.UUID) ([]*models.Order, error)
+}
 
 type OrderForm struct {
 	Number string
@@ -27,7 +35,8 @@ func (d *OrderForm) IsValid() bool {
 func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 	var data OrderForm
-	userID, ok := auth.UserIDFrom(r.Context())
+	var ctx = r.Context()
+	userID, ok := auth.UserIDFrom(ctx)
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -49,34 +58,18 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
-	args := map[string]interface{}{"number": data.Number}
-	obj, err := h.OrderStore.GetFirstByParameters(context.TODO(), args)
+
+	err = h.OrderService.Set(ctx, userID, data.Number)
 
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+		var serviceError *lErrors.ServicesError
+		if errors.As(err, &serviceError) {
 
-	if obj != nil {
-
-		if obj.UserID != userID {
-			http.Error(w, "", http.StatusConflict)
+			http.Error(w, serviceError.Error(), serviceError.HttpCode)
 			return
 		}
 
-		http.Error(w, "", http.StatusOK)
-		return
-
-	}
-
-	newOrder := models.NewOrder()
-	newOrder.Number = data.Number
-	newOrder.UserID = userID
-
-	err = h.OrderStore.Insert(context.TODO(), newOrder)
-
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
 		return
 	}
 
@@ -85,26 +78,25 @@ func (h *APIHandler) SetUserOrder(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) GetListOrdersUser(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := auth.UserIDFrom(r.Context())
+	var ctx = r.Context()
+	userID, ok := auth.UserIDFrom(ctx)
 
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	filterParams := []store.FilterParams{
-		{Field: "user_id", Value: userID},
-	}
-	objs, err := h.OrderStore.GetAllByParameters(context.TODO(), &store.OptionsQuery{
-		Filter: filterParams, Sorting: []store.SortingParams{{Key: "updated_at"}}})
+	objs, err := h.OrderService.GetList(ctx, userID)
 
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+		var serviceError *lErrors.ServicesError
+		if errors.As(err, &serviceError) {
 
-	if len(objs) == 0 {
-		http.Error(w, "", http.StatusNoContent)
+			http.Error(w, serviceError.Error(), serviceError.HttpCode)
+			return
+		}
+
+		http.Error(w, "Ошибка сервера, попробуйте позже.", http.StatusInternalServerError)
 		return
 	}
 
