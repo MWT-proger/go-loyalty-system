@@ -12,7 +12,6 @@ import (
 
 type OrderStorer interface {
 	GetAllByParameters(ctx context.Context, options *store.OptionsQuery) ([]*models.Order, error)
-	GetFirstByParameters(ctx context.Context, args map[string]interface{}) (*models.Order, error)
 	Insert(ctx context.Context, obj *models.Order) error
 }
 
@@ -31,14 +30,20 @@ func NewOrderService(s OrderStorer) *OrderService {
 // с numberOrder для пользователя с userID
 func (s *OrderService) Set(ctx context.Context, userID uuid.UUID, numberOrder string) error {
 
-	args := map[string]interface{}{"number": numberOrder}
-	obj, err := s.OrderStore.GetFirstByParameters(ctx, args)
+	var obj *models.Order
+
+	filterParams := []store.FilterParams{
+		{Field: "number", Value: numberOrder},
+	}
+	objs, err := s.OrderStore.GetAllByParameters(ctx, &store.OptionsQuery{
+		Filter: filterParams, Sorting: []store.SortingParams{{Key: "updated_at"}}, Limit: 1})
 
 	if err != nil {
 		return lErrors.InternalServicesError
 	}
 
-	if obj != nil {
+	if len(objs) != 0 {
+		obj = objs[0]
 
 		if obj.UserID != userID {
 			return lErrors.OrderExistsOtherUserServicesError
