@@ -141,7 +141,7 @@ func TestGetConfigFromEnv(t *testing.T) {
 			os.Setenv("ACCRUAL_SYSTEM_ADDRESS", tt.want.AccuralSystemAddress)
 			os.Setenv("DATABASE_URI", tt.want.DatabaseDSN)
 			os.Setenv("SECRET_KEY", tt.want.Auth.SecretKey)
-			SetConfigFromEnv()
+			setConfigFromEnv()
 			assert.Equal(t, newConfig, tt.want, "newConfig не совпадает с ожидаемым")
 		})
 	}

@@ -27,9 +27,9 @@ type Config struct {
 
 var newConfig Config
 
-// InitConfig() Присваивает локальной не импортируемой переменной newConfig базовые значения
-// Вызывается один раз при старте проекта
-func InitDefaultConfig() {
+// initDefaultConfig() Присваивает локальной не импортируемой переменной newConfig базовые значения.
+// Вызывается один раз при старте проекта.
+func initDefaultConfig() {
 	newConfig = Config{
 		HostServer:           ":8000",
 		LogLevel:             "info",
@@ -55,23 +55,24 @@ func InitDefaultConfig() {
 
 }
 
-// InitConfig() Присваивает локальной не импортируемой переменной newConfig базовые значения
+// InitConfig() Инициализирует локальную не импортируемую переменную newConfig.
+// Вызывает все доступные методы получения конфигов.
 // Вызывается один раз при старте проекта
 func InitConfig() *Config {
-	InitDefaultConfig()
-	ParseFlags()
-	SetConfigFromEnv()
+	initDefaultConfig()
+	parseFlags()
+	setConfigFromEnv()
 	return &newConfig
 }
 
-// GetConfig() выводит не импортируемую переменную newConfig
+// GetConfig() выводит не импортируемую переменную newConfig.
 func GetConfig() Config {
 	return newConfig
 }
 
-// SetConfigFromEnv() Прсваевает полям значения из ENV
-// Вызывается один раз при старте проекта
-func SetConfigFromEnv() {
+// setConfigFromEnv() Прсваевает полям  глобальной переменной newConfig значения из ENV.
+// Вызывается один раз при старте проекта.
+func setConfigFromEnv() {
 
 	if envBaseURLShortener := os.Getenv("RUN_ADDRESS"); envBaseURLShortener != "" {
 		newConfig.HostServer = envBaseURLShortener
@@ -90,9 +91,9 @@ func SetConfigFromEnv() {
 	}
 }
 
-// ParseFlags обрабатывает аргументы командной строки
-// и сохраняет их значения в соответствующих переменных
-func ParseFlags() {
+// parseFlags обрабатывает аргументы командной строки
+// и сохраняет их значения в соответствующих переменных глобальной переменной newConfig
+func parseFlags() {
 
 	flag.StringVar(&newConfig.HostServer, "a", newConfig.HostServer, "адрес и порт для запуска сервера")
 	flag.StringVar(&newConfig.DatabaseDSN, "d", newConfig.DatabaseDSN, "строка с адресом подключения к БД")
