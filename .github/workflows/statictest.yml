@@ -12,24 +12,24 @@ jobs:
 
   statictest:
     runs-on: ubuntu-latest
-    container: golang:1.19
+    env:
+      GO111MODULE: "auto"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download statictest binary
-        uses: robinraju/release-downloader@v1
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          repository: Yandex-Practicum/go-autotests-bin
-          latest: true
-          fileName: statictest
-          out-file-path: .tools
+          go-version: 1.21.3
+
+      - name: Verify dependencies
+        run: go mod verify
 
       - name: Setup autotest binary
         run: |
-          chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
-          mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
+          chmod -R +x $GITHUB_WORKSPACE/tools/statictest
 
       - name: Run statictest
         run: |
-          go vet -vettool=$(which statictest) ./...
+          go vet -vettool=./tools/statictest ./...

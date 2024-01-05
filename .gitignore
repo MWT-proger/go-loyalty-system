@@ -21,3 +21,7 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+temp
+cmd/gophermart/__debug_bin
+deployments/.env
+__debug_*
